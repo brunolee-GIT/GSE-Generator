@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html id="html">
+	<head>
+		<meta charset='utf-8'/>
+		<title>GSE_achievements_language</title>
+		<HTA:APPLICATION ID="oHTA" APPLICATIONNAME = "GSE_achievements_language" BORDER = "THIN" BORDERSTYLE = "NORMAL" CAPTION = "NO" CONTEXTMENU = "NO" ICON = "icon.ico" INNERBORDER = "NO" MAXIMIZEBUTTON = "NO" MINIMIZEBUTTON = "NO" NAVIGABLE = "NO" SCROLL = "NO" SCROLLFLAT = "NO" SELECTION = "NO" SHOWINTASKBAR = "YES" SINGLEINSTANCE = "NO" SYSMENU = "NO" WINDOWSTATE = "NORMAL"/>
+	</head>
+
+	<script Language="VBScript">
+		Sub Window_onLoad
+			'MOVE E SIZE WINDOW
+			Width = Document.Body.OffsetHeight*4.5
+			Height = Document.Body.OffsetHeight*1.6
+			window.resizeTo Width,Height
+			With Window.Screen
+				posX = (.AvailWidth  - Width ) / 2
+				posY = (.AvailHeight - Height ) / 2
+			End With
+			Window.MoveTo posX, posY
+
+			'ARGUMENTS
+			From = "HTA"
+			splang = "supported_languages.txt"
+			arguments = Split(oHTA.commandLine, chr(34))
+			For i = 3 to (Ubound(arguments) - 1) Step 2
+			Select Case arguments(i)
+				Case arguments(3)
+					From = "BAT"
+					splang = arguments(3)
+			End Select
+			Next
+			
+			Set fso = CreateObject("Scripting.FileSystemObject")
+
+			'LANGUAGE CODES
+			If fso.FileExists(splang) Then
+				Set objFile = fso.OpenTextFile(splang, 1)
+				Do Until objFile.AtEndOfStream
+					strsl = objFile.Readline()
+					Set objOption = Document.createElement("OPTION")
+					'MsgBox strsl
+					If (strsl = "arabic") Then Text = "Arabic" : Value = "ar" End If
+					If (strsl = "bulgarian") Then Text = "Bulgarian" : Value = "bg" End If
+					If (strsl = "schinese") Then Text = "Simplified Chinese" : Value = "zh-CN" End If
+					If (strsl = "tchinese") Then Text = "Traditional Chinese" : Value = "zh-TW" End If
+					If (strsl = "czech") Then Text = "Czech" : Value = "cs" End If
+					If (strsl = "danish") Then Text = "Danish" : Value = "da" End If
+					If (strsl = "dutch") Then Text = "Dutch" : Value = "nl" End If
+					If (strsl = "english") Then Text = "English" : Value = "en" End If
+					If (strsl = "finnish") Then Text = "Finnish" : Value = "fi" End If
+					If (strsl = "french") Then Text = "French" : Value = "fr" End If
+					If (strsl = "german") Then Text = "German" : Value = "de" End If
+					If (strsl = "greek") Then Text = "Greek" : Value = "el" End If
+					If (strsl = "hungarian") Then Text = "Hungarian" : Value = "hu" End If
+					If (strsl = "indonesian") Then Text = "Indonesian" : Value = "id" End If
+					If (strsl = "italian") Then Text = "Italian" : Value = "it" End If
+					If (strsl = "japanese") Then Text = "Japanese" : Value = "ja" End If
+					If (strsl = "koreana") Then Text = "Korean" : Value = "ko" End If
+					If (strsl = "norwegian") Then Text = "Norwegian" : Value = "no" End If
+					If (strsl = "polish") Then Text = "Polish" : Value = "pl" End If
+					If (strsl = "portuguese") Then Text = "Portuguese - Portugal" : Value = "pt" End If
+					If (strsl = "brazilian") Then Text = "Portuguese - Brazil" : Value = "pt-BR" End If
+					If (strsl = "romanian") Then Text = "Romanian" : Value = "ro" End If
+					If (strsl = "russian") Then Text = "Russian" : Value = "ru" End If
+					If (strsl = "spanish") Then Text = "Spanish - Spain" : Value = "es" End If
+					If (strsl = "latam") Then Text = "Spanish - Latin America" : Value = "es-419" End If
+					If (strsl = "swedish") Then Text = "Swedish" : Value = "sv" End If
+					If (strsl = "thai") Then Text = "Thai" : Value = "th" End If
+					If (strsl = "turkish") Then Text = "Turkish" : Value = "tr" End If
+					If (strsl = "ukrainian" ) Then Text = "Ukrainian" : Value = "uk" End If
+					If (strsl = "vietnamese") Then Text = "Vietnamese" : Value = "vn" End If
+					objOption.Text = Text
+					objOption.Value = Value
+					supported_languages.Add(objOption)
+				loop
+				objFile.Close
+				document.getElementById("FileLang").style.display = "inline"
+			Else
+				document.getElementById("AllLang").style.display = "inline"
+			End If
+
+			document.getElementById("config").from = From
+			document.getElementById("SAVE").innerHTML = "<button type='button' onclick='SAVE' title='Select language' disabled>SELECT</button>"
+		End Sub
+	</script>
+
+	<script Language="VBScript">
+		Sub SAVE
+			From = document.getElementById("config").from
+
+			'LANGUAGES
+			If not (document.getElementById("supported_languages").value = nil) Then
+				languagecode = document.getElementById("supported_languages").value
+				selectedIndex = document.getElementById("supported_languages").innerHTML
+				language = Split(Split(selectedIndex, languagecode+">")(1), "<")(0)
+			Else
+				languagecode = document.getElementById("Languages").value
+				selectedIndex = document.getElementById("Languages").innerHTML
+				language = Split(Split(selectedIndex, languagecode+">")(1), "<")(0)
+			End If
+
+			'PASS TO BAT
+			If (From = "BAT") Then
+				Set fso = CreateObject("Scripting.FileSystemObject")
+				fso.GetStandardStream(1).WriteLine(languagecode)
+			Else
+				MsgBox "This is not a standalone tool, is only a selector for batch."+vbNewLine+vbNewLine+"Selected : "+language+", with code: "+languagecode, vbInformation, "INFO"
+			End If
+
+			'CLOSE
+			window.close()
+		End Sub
+
+		Sub CONTINUE
+			document.getElementById("SAVE").innerHTML = "<button type='button' onclick='SAVE' enabled>SELECT</button>"
+		End Sub
+	</script>
+
+	<style>
+		html, body {font-size: 100%; font-family: Arial; background-color: #282828; color: white;}
+		label {position: absolute; left: 5%;}
+		font, {font-size: 75%; font-family: Arial;}
+		select {position: absolute; right: 5%; width: 206px;}
+		button {cursor: pointer; width: 32.7%; height: 10%; background: #989898;}
+		button[enabled]:hover {background: green; color: white;}
+		#AllLang {display: none;}
+		#FileLang {display: none;}
+	</style>
+
+	<body>
+		<span id="config" from=""></span>
+		<center><H3>GSE ACHIEVEMENTS LANGUAGE</H3><center>
+		<!--Supported Languages by Game-->
+		<font style="position: relative; left: 5%;" id="langinfile"></font>
+		<span id="FileLang"><label for="supported_languages">Select Language:</label>
+		<select id="supported_languages" onchange="CONTINUE">
+			<option selected disabled> &nbsp -- Languages -- &nbsp </option>
+		</select><div style="line-height: 0.4;"> &nbsp </div></span>
+		<!--All Steam Languages-->
+		<span id="AllLang"><label for="Languages">Select Language:</label>
+		<select id="Languages" onchange="CONTINUE">
+			<option selected disabled> &nbsp -- Languages -- &nbsp </option>
+			<option value="ar">Arabic</option>
+			<option value="bg">Bulgarian</option>
+			<option value="zh-CN">Simplified Chinese</option>
+			<option value="zh-TW">Traditional Chinese</option>
+			<option value="cs">Czech</option>
+			<option value="da">Danish</option>
+			<option value="nl">Dutch</option>
+			<option value="en">English</option>
+			<option value="fi">Finnish</option>
+			<option value="fr">French</option>
+			<option value="de">German</option>
+			<option value="el">Greek</option>
+			<option value="hu">Hungarian</option>
+			<option value="id">Indonesian</option>
+			<option value="it">Italian</option>
+			<option value="ja">Japanese</option>
+			<option value="ko">Korean</option>
+			<option value="no">Norwegian</option>
+			<option value="pl">Polish</option>
+			<option value="pt">Portuguese - Portugal</option>
+			<option value="pt-BR">Portuguese - Brazil</option>
+			<option value="ro">Romanian</option>
+			<option value="ru">Russian</option>
+			<option value="es">Spanish - Spain</option>
+			<option value="es-419">Spanish - Latin America</option>
+			<option value="sv">Swedish</option>
+			<option value="th">Thai</option>
+			<option value="tr">Turkish</option>
+			<option value="uk">Ukrainian</option>
+			<option value="vn">Vietnamese</option>
+		</select><div style="line-height: 0.4;"> &nbsp </div></span>
+		<div style="line-height: 1.5;"> &nbsp </div>
+		<font style="position: absolute; left: 5%; color: gray">Will download achievements on that specific language (if exist)</font>
+		<div style="line-height: 0.8;"> &nbsp </div>
+		<font style="position: absolute; left: 5%; color: gray">If not exist will use English</font>
+		<div style="line-height: 2.5;"> &nbsp </div>
+		<!--Save Button-->
+		<center><span id="SAVE"></span></center>
+	</body>
+</html>

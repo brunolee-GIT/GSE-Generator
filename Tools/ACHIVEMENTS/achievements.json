@@ -1,0 +1,44 @@
+{
+	"ACHIEVEMENT_01": {
+		"name": "ACHIEVEMENT_01",
+		"displayName": "THE POWER OF BAT...",
+		"description": "Thank you for playing this batch!",
+		"icon": "images\\use.png",
+		"earned": false
+	},
+	"ACHIEVEMENT_02": {
+		"name": "ACHIEVEMENT_02",
+		"displayName": "DO YOU NEED HELP?",
+		"description": "You found the help.",
+		"icon": "images\\help.png",
+		"earned": false
+	},
+	"ACHIEVEMENT_03": {
+		"name": "ACHIEVEMENT_03",
+		"displayName": "ALL OF ME?",
+		"description": "From begining to the end.",
+		"icon": "images\\all.png",
+		"earned": false
+	},
+	"ACHIEVEMENT_04": {
+		"name": "ACHIEVEMENT_04",
+		"displayName": "TOASTY",
+		"description": "Test achievements.",
+		"icon": "images\\toast.png",
+		"earned": false
+	},
+	"ACHIEVEMENT_05": {
+		"name": "ACHIEVEMENT_05",
+		"displayName": "STEAM SUBSYSTEMS",
+		"description": "Generate steam_interfaces file.",
+		"icon": "images\\interfaces.png",
+		"earned": false
+	},
+	"ACHIEVEMENT_06": {
+		"name": "ACHIEVEMENT_06",
+		"displayName": "OTAVEPTO GBE_FORK",
+		"description": "Download Goldberg steam emulator.",
+		"icon": "images\\emulator.png",
+		"earned": false
+	}
+}

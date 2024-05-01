@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html id="html">
+	<head>
+		<meta charset='utf-8'/>
+		<title>GSE_user_configs</title>
+		<HTA:APPLICATION ID="oHTA" APPLICATIONNAME = "GSE_user_configs" BORDER = "THIN" BORDERSTYLE = "NORMAL" CAPTION = "NO" CONTEXTMENU = "NO" ICON = "icon.ico" INNERBORDER = "NO" MAXIMIZEBUTTON = "NO" MINIMIZEBUTTON = "NO" NAVIGABLE = "NO" SCROLL = "NO" SCROLLFLAT = "NO" SELECTION = "NO" SHOWINTASKBAR = "YES" SINGLEINSTANCE = "NO" SYSMENU = "NO" WINDOWSTATE = "NORMAL"/>
+	</head>
+
+	<script Language="VBScript">
+		Sub Window_onLoad
+			'MOVE E SIZE WINDOW
+			Width = Document.Body.OffsetHeight*3
+			Height = Document.Body.OffsetHeight*1.5
+			window.resizeTo Width,Height
+			With Window.Screen
+				posX = (.AvailWidth  - Width ) / 2
+				posY = (.AvailHeight - Height ) / 2
+			End With
+			Window.MoveTo posX, posY
+
+			'ENVIRONMENT VARIABLES
+			Set WshShell = CreateObject("WScript.Shell")
+			appdata = WshShell.expandEnvironmentStrings("%APPDATA%")
+			username = WshShell.expandEnvironmentStrings("%USERNAME%")
+
+			Set fso = CreateObject("Scripting.FileSystemObject")
+			
+			old_SteamSave = appdata+"\Goldberg SteamEmu Saves\"
+
+			'ACCOUNT NAME
+			old_account_name_file = old_SteamSave+"settings\account_name.txt"
+			If fso.FileExists(old_account_name_file) Then
+				Set objFileaccount_name = fso.OpenTextFile(old_account_name_file, 1)
+				Namebyfile = objFileaccount_name.Readline()
+				objFileaccount_name.Close
+			Else
+				Namebyfile = username
+			End If
+
+			'STEAM_ID
+			old_user_steam_id_file = old_SteamSave+"settings\user_steam_id.txt"
+			If fso.FileExists(old_user_steam_id_file) Then
+				Set objFilesteam_id = fso.OpenTextFile(old_user_steam_id_file, 1)
+				steamidbyfile = objFilesteam_id.Readline()
+				objFilesteam_id.Close
+			Else
+				steamidbyfile = "76561197960287930"
+			End If
+
+			'SAVE BASE FOLDER
+			If fso.FolderExists(old_SteamSave) Then
+				Savefoldernamebyfile = "Goldberg SteamEmu Saves"
+			Else
+				Savefoldernamebyfile = "GSE Saves"
+			End If
+
+			'ARGUMENTS
+			From = "HTA"
+			ForceFile = "GSE_force.ini"
+			CountryCodes = "country_codes"
+			splang = "supported_languages.txt"
+			Localsavefoldername = "GSE Saves"
+			arguments = Split(oHTA.commandLine, chr(34))
+			For i = 3 to (Ubound(arguments) - 1) Step 2
+			Select Case arguments(i)
+				Case arguments(3)
+					From = "BAT"
+					ForceFile = "Tools\GSE_force.ini"
+					CountryCodes = "Tools\country_codes"
+                    splang = arguments(3)
+			End Select
+			Next
+			
+			'FORCE
+			If fso.FileExists(ForceFile) Then
+				Set objFile = fso.OpenTextFile(ForceFile, 1)
+				Do Until objFile.AtEndOfStream
+				strOpt = objFile.Readline()
+				If Instr(strOpt, "force_account_name=") Then force_account_name = Split(strOpt, "=")(1) End If
+				If Instr(strOpt, "force_steamid=") Then force_steamid = Split(strOpt, "=")(1) End If
+				If Instr(strOpt, "force_savefoldername=") Then force_savefoldername = Split(strOpt, "=")(1) End If
+				If Instr(strOpt, "force_localsavefoldername=") Then force_localsavefoldername = Split(strOpt, "=")(1) End If
+			loop
+			objFile.Close
+				If not force_account_name = nil Then Namebyfile = force_account_name End If
+				If not force_steamid = nil Then steamidbyfile = force_account_name End If
+				If not force_savefoldername = nil Then Savefoldernamebyfile = force_account_name End If
+				If not force_localsavefoldername = nil Then Localsavefoldername = force_localsavefoldername End If
+			End If
+			
+			'LANGUAGES
+			old_lang_file = old_SteamSave+"settings\language.txt"
+			If fso.FileExists(old_lang_file) Then
+				Set objFilesteam_id = fso.OpenTextFile(old_lang_file, 1)
+				langbyfile = objFilesteam_id.Readline()
+				objFilesteam_id.Close
+				document.getElementById("langinfile").innerHTML = "("+langbyfile+")"
+			End If
+			If fso.FileExists(splang) Then
+				Set objFile = fso.OpenTextFile(splang, 1)
+				Do Until objFile.AtEndOfStream
+					Value = objFile.Readline()
+					Set objOption = Document.createElement("OPTION")
+					strsl = UCase(left(Value, 1)) & Mid(Value, 2)
+					If (Value = "schinese") Then strsl = "Simplified Chinese" End If
+					If (Value = "tchinese") Then strsl = "Traditional Chinese" End If
+					If (Value = "koreana") Then strsl = "Korean" End If
+					If (Value = "portuguese") Then strsl = "Portuguese - Portugal" End If
+					If (Value = "brazilian") Then strsl = "Portuguese - Brazil" End If
+					If (Value = "spanish") Then strsl = "Spanish - Spain" End If
+					If (Value = "latam") Then strsl = "Spanish - Latin America" End If
+					objOption.Text = strsl
+					objOption.Value = Value
+					supported_languages.Add(objOption)
+				loop
+				objFile.Close
+				document.getElementById("FileLang").style.display = "inline"
+			Else
+				document.getElementById("AllLang").style.display = "inline"
+			End If
+			
+			'COUNTRY CODES
+			If fso.FileExists(CountryCodes) Then
+				Set objFile = fso.OpenTextFile(CountryCodes, 1)
+				Do Until objFile.AtEndOfStream
+					Line = objFile.Readline()
+					Set objOption = Document.createElement("OPTION")
+					Text = Split(Line, ";")(0)
+					Value = Split(Line, ";")(1)
+					objOption.Text = Text
+					objOption.Value = Value
+					Country.Add(objOption)
+				loop
+				objFile.Close
+				document.getElementById("CountryCode").style.display = "inline"
+			Else
+				document.getElementById("CountryCode").style.display = "none"
+			End If
+
+			document.getElementById("Name").value = Namebyfile
+			document.getElementById("SteamID").value = steamidbyfile
+			document.getElementById("SaveFolderName").value = Savefoldernamebyfile
+			document.getElementById("config").from = From
+			document.getElementById("config").localsave = Localsavefoldername
+			document.getElementById("SAVE").innerHTML = "<button type='button' onclick='SAVE' title='Select language' disabled>SAVE</button>"
+		End Sub
+	</script>
+
+	<script Language="VBScript">
+		Sub SAVE
+			From = document.getElementById("config").from
+			account_name = "account_name="+document.getElementById("Name").value
+			account_steamid = "account_steamid="+document.getElementById("SteamID").value
+			ip_country = "ip_country="+document.getElementById("Country").value
+			local_save_path = "local_save_path="+document.getElementById("LocalSave").value+document.getElementById("config").localsave
+			saves_folder_name = "saves_folder_name="+document.getElementById("SaveFolderName").value
+
+			'LANGUAGES
+			If not (document.getElementById("supported_languages").value = nil) Then
+				language = "language="+document.getElementById("supported_languages").value
+			Else
+				language = "language="+document.getElementById("Languages").value
+			End If
+
+			OutputtextFile = "[user::general]"+vbNewLine+account_name+vbNewLine+account_steamid+vbNewLine+language
+			OutputtextBAT = account_name+vbNewLine+account_steamid+vbNewLine+language
+
+			'COUNTRY CODE
+			If not (document.getElementById("Country").value = nil) Then
+				OutputtextFile = OutputtextFile+vbNewLine+ip_country
+				OutputtextBAT = OutputtextBAT+vbNewLine+ip_country
+			End If
+
+			OutputtextFile = OutputtextFile+vbNewLine+vbNewLine+"[user::saves]"
+
+			'LOCAL SAVE
+			If(document.getElementById("LocalSave").checked = true) Then
+				OutputtextFile = OutputtextFile+vbNewLine+local_save_path
+				OutputtextBAT = OutputtextBAT+vbNewLine+local_save_path
+			End If
+
+			OutputtextFile = OutputtextFile+vbNewLine+saves_folder_name
+			OutputtextBAT = OutputtextBAT+vbNewLine+saves_folder_name
+
+			'TYPE TO FILE
+			Set fso = CreateObject("Scripting.FileSystemObject")
+			Set objFile = fso.CreateTextFile("configs.user.ini", 2)
+			objFile.WriteLine OutputtextFile
+			objFile.Close
+
+			'PASS TO BAT
+			If (From = "BAT") Then fso.GetStandardStream(1).WriteLine(OutputtextBAT) End If
+
+			'CLOSE
+			window.close()
+		End Sub
+		
+		Sub KeyCheck
+			If Window.Event.KeyCode < 48 OR Window.Event.KeyCode > 57 Then Window.Event.returnValue = False End If
+		End Sub
+		
+		Sub CONTINUE
+			document.getElementById("SAVE").innerHTML = "<button type='button' onclick='SAVE' enabled>SAVE</button>"
+		End Sub
+	</script>
+
+	<style>
+		html, body {font-size: 100%; font-family: Arial; background-color: #282828; color: white;}
+		label {position: absolute; left: 5%;}
+		font, {font-size: 75%; font-family: Arial;}
+		input {position: absolute; right: 5%; width: 200px;}
+		select {position: absolute; right: 5%; width: 206px;}
+		button {cursor: pointer; width: 32.7%; height: 10%; background: #989898;}
+		button[enabled]:hover {background: green; color: white;}
+		#AllLang {display: none;}
+		#FileLang {display: none;}
+	</style>
+
+	<body>
+		<span id="config" from="" localsave=""></span>
+		<center><H3>GSE USER CONFIGS</H3><center>
+		<!--Account Name-->
+		<label for="Name">User account name:</label>
+		<input id="Name" value=""></input>
+		<div style="line-height: 1.5;"> &nbsp </div>
+		<!--SteamID-->
+		<label for="SteamID">SteamID <font>(Steam64 format)</font>:</label>
+		<input id="SteamID" maxlength="17" value="" onKeyPress="KeyCheck"></input>
+		<div style="line-height: 1.5;"> &nbsp </div>
+		<!--Supported Languages by Game-->
+		<font style="position: relative; left: 5%;" id="langinfile"></font>
+		<span id="FileLang"><label for="supported_languages">Select Language:</label>
+		<select id="supported_languages" onchange="CONTINUE">
+			<option selected disabled> &nbsp -- Languages -- &nbsp </option>
+		</select><div style="line-height: 0.4;"> &nbsp </div></span>
+		<!--All Steam Languages-->
+		<span id="AllLang"><label for="Languages">Select Language:</label>
+		<select id="Languages" onchange="CONTINUE">
+			<option selected disabled> &nbsp -- Languages -- &nbsp </option>
+			<option value="arabic" enabled>Arabic</option>
+			<option value="bulgarian" enabled>Bulgarian</option>
+			<option value="schinese" enabled>Simplified Chinese</option>
+			<option value="tchinese" enabled>Traditional Chinese</option>
+			<option value="czech" enabled>Czech</option>
+			<option value="danish" enabled>Danish</option>
+			<option value="dutch" enabled>Dutch</option>
+			<option value="english" enabled>English</option>
+			<option value="finnish" enabled>Finnish</option>
+			<option value="french" enabled>French</option>
+			<option value="german" enabled>German</option>
+			<option value="greek" enabled>Greek</option>
+			<option value="hungarian" enabled>Hungarian</option>
+			<option value="indonesian" enabled>Indonesian</option>
+			<option value="italian" enabled>Italian</option>
+			<option value="japanese" enabled>Japanese</option>
+			<option value="koreana" enabled>Korean</option>
+			<option value="norwegian" enabled>Norwegian</option>
+			<option value="polish" enabled>Polish</option>
+			<option value="portuguese" enabled>Portuguese - Portugal</option>
+			<option value="brazilian" enabled>Portuguese - Brazil</option>
+			<option value="romanian" enabled>Romanian</option>
+			<option value="russian" enabled>Russian</option>
+			<option value="spanish" enabled>Spanish - Spain</option>
+			<option value="latam" enabled>Spanish - Latin America</option>
+			<option value="swedish" enabled>Swedish</option>
+			<option value="thai" enabled>Thai</option>
+			<option value="turkish" enabled>Turkish</option>
+			<option value="ukrainian" enabled>Ukrainian</option>
+			<option value="vietnamese" enabled>Vietnamese</option>
+		</select><div style="line-height: 0.4;"> &nbsp </div></span>
+		<!--Country codes-->
+		<span id="CountryCode"><label for="Country">Select country IP <font>(if the game queries it)</font>:</label>
+		<select id="Country">
+			<option selected disabled> &nbsp -- Country -- &nbsp </option>
+		</select><div style="line-height: 1.5;"> &nbsp </div></span>
+		<div style="line-height: 1.5;"> &nbsp </div></span>
+		<!--Save Folder Name-->
+		<label for="SaveFolderName">Base folder name <font>(used to store save data)</font>:</label>
+		<input id="SaveFolderName" value=""></input>
+		<div style="line-height: 1.5;"> &nbsp </div>
+		<!--Local Save-->
+		<label style="left: 61%;" for="LocalSave">local save:</label>
+		<input style="left: 77%;" type="checkbox" id="LocalSave" value="./"></input>
+		<div style="line-height: 2.5;"> &nbsp </div>
+		<!--Save Button-->
+		<center><span id="SAVE"></span></center>
+	</body>
+</html>
