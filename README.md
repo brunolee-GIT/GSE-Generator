@@ -6,24 +6,24 @@
 	&nbsp;<a href=""><img src="https://img.shields.io/badge/windows-10 / 11- ?logo=windows10&style=social" alt="" title="Windows"></a>
 </p>
 
-GSE_Generator.bat generates the "steam_settings" folder for the desired game with the following contents:
+GSE_Generator.bat generates the "steam_settings" folder for the desired game with the following structure and contents:
 ``` text
 Game name/
-      ↳ steam_settings/
-            ↳ images/
-                  ↳ achievements images...
-            ↳ sounds/
-                  ↳ overlay_achievement_notification.wav
-            ↳ header image
-            ↳ achievements.json
-            ↳ configs.app.ini
-            ↳ configs.overlay.ini
-            ↳ configs.user.ini
-            ↳ steam_appid.txt
-            ↳ steam_interfaces.txt
-            ↳ supported_languages.txt
-      ↳ steam_api.dll or steam_api64.dll
-      ↳ steam_api_o.dll or steam_api64_o.dll
+ ├── steam_settings/
+ │    ├── images/
+ │    │    └── achievements images...
+ │    ├── sounds/
+ │    │    └── overlay_achievement_notification.wav
+ │    ├── header image
+ │    ├── achievements.json
+ │    ├── configs.app.ini
+ │    ├── configs.overlay.ini
+ │    ├── configs.user.ini
+ │    ├── steam_appid.txt
+ │    ├── steam_interfaces.txt
+ │    └── supported_languages.txt
+ ├── steam_api.dll or steam_api64.dll
+ └── steam_api_o.dll or steam_api64_o.dll
 ```
 > **How it works**
 >
