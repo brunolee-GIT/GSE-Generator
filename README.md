@@ -11,7 +11,8 @@ GSE_Generator.bat generates the "steam_settings" folder for the desired game wit
 Game name/
  ├── steam_settings/
  │    ├── images/
- │    │    └── achievements images...
+ │    │    ├── achievements images
+ │    │    └── ...
  │    ├── sounds/
  │    │    └── overlay_achievement_notification.wav
  │    ├── header image
@@ -37,7 +38,8 @@ Game name/
 #### Database
 ``` text
 Database/
-      ↳ appid...
+ ├── appid .ini
+ └── ...
 ```
 >> *The database, in addition to speeding up the work of **GSE_Generator.bat**, can also be used to create the Applist for GreenLuma with **GreenLuma_Create_AppList.bat***
 
