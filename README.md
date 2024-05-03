@@ -28,7 +28,7 @@ Game name/
 ```
 > **How it works**
 >
->> *The information about available dlcs is downloaded from steam or the database, the names for the dlcs are searched in 4 places in the database, steam, steamdb and steam api.*
+>> *The information about available dlcs is downloaded from steam or the database, the names for the dlcs are searched in 4 places, in the database, steam, steamdb and steam api.*
 >> 
 >> *The achievements will be downloaded in one of the languages supported by the game, with the respective images.*
 >> 
