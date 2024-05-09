@@ -186,7 +186,7 @@ set "steamgame=%game: =+%"
 
 set GameAppID=&set GameName=
 Tools\CURL\curl.exe -s --config Tools/CURL/config/safari15_5.config --header @Tools/CURL/config/safari15_5.header --url "https://www.google.com/search?q=%steamgame%+steamdb" -o google.html
-powershell -Command "(gc -LiteralPath '%HOME%google.html') -replace '<div><span jscontroller', \"`r`n^<GAME^>^<\" -replace 'href=""', '><' -replace '"""" data-', 'game><data' | Out-File -LiteralPath '%HOME%google.html' -NoNewline -encoding Default">NUL
+powershell -Command "(gc -LiteralPath '%HOME%google.html') -replace '<div><span jscontroller', \"`r`n^<GAME^>^<\" -replace 'href=""', '><' -replace '"""" data-', 'game><data' -replace \"'\", '' -replace '\\', '' -replace '\|', '' -replace '\?', '' -replace '\*', '' -replace '""', '' | Out-File -LiteralPath '%HOME%google.html' -NoNewline -encoding Default">NUL
 for /f "tokens=1-9 delims=<>" %%1 in (google.html) do (
 	if "%%1"=="GAME" (
 		if not defined GameAppID (
@@ -211,9 +211,13 @@ del "google.html">NUL
 if not defined GameName echo  [91mGAME NOT FOUND[0m&timeout 3&call :function_banner&call :function_search_imput
 set "GameName=%GameName: Price history=%"
 set "GameName=%GameName: - SteamDB=%"
+set "GameName=%GameName:<=%"
+set "GameName=%GameName:>=%"
+set "GameName=%GameName:/=%"
+set "GameName=%GameName::=%"
 
 :SHOW_IMAGE
-curl -s "https://cdn.akamai.steamstatic.com/steam/apps/%GameAppID%/header.jpg" -o "%GameAppID%.jpg"
+Tools\CURL\curl.exe -s "https://cdn.akamai.steamstatic.com/steam/apps/%GameAppID%/header.jpg" -o "%GameAppID%.jpg"
 rem curl -s "https://cdn.akamai.steamstatic.com/steam/apps/%GameAppID%/logo.png" -o "%GameAppID%_logo.png"
 rem curl -s "https://cdn.akamai.steamstatic.com/steam/apps/%GameAppID%/library_600x900.jpg" -o "%GameAppID%_cover.png"
 powershell -Command^
@@ -325,7 +329,7 @@ set newdlcline=
 for /f %%a in ('powershell -Command "[Console]::CursorTop"') do set /a PROGRESSBACKTOLINE=%%a
 :: get dlcs list
 echo %GameAppID%>dlcs_%GameAppID%.txt
-curl -s "https://store.steampowered.com/api/appdetails/?filters=basic&appids=%GameAppID%" -o %GameAppID%.json
+Tools\CURL\curl.exe -s "https://store.steampowered.com/api/appdetails/?filters=basic&appids=%GameAppID%" -o %GameAppID%.json
 for /f %%a in ('powershell -Command "$json = (gc -LiteralPath '%HOME%%GameAppID%.json') | ConvertFrom-Json; [bool]($json.PSobject.Properties.value.data -match 'dlc')"') do set ExistJsonDlc=%%a
 if "%ExistJsonDlc%"=="True" (
 	powershell -Command "$json = (gc -LiteralPath '%HOME%%GameAppID%.json') | ConvertFrom-Json; $json.PSobject.Properties.value.data.dlc | Sort-Object">>dlcs_%GameAppID%.txt
@@ -355,7 +359,7 @@ for /f "tokens=*" %%a in (dlcs_%GameAppID%.txt) do (
 	)
 	rem get DLC name from STEAM
 	if not defined AppName (
-		for /f "tokens=1-26 delims=," %%a in ('curl -s "https://store.steampowered.com/api/appdetails/?filters=basic&appids=!DlcId!"') do (
+		for /f "tokens=1-26 delims=," %%a in ('Tools\CURL\curl.exe -s "https://store.steampowered.com/api/appdetails/?filters=basic&appids=!DlcId!"') do (
 			if "%%a"=="{"!DlcId!":{"success":true" (
 				set "AppName=%%c"
 				set "AppName=!AppName:"name":"=!"
@@ -388,7 +392,7 @@ for /f "tokens=*" %%a in (dlcs_%GameAppID%.txt) do (
 	if not defined AppName (
 		if not defined AppList (
 			set AppList=AppList
-			curl -s "https://api.steampowered.com/ISteamApps/GetAppList/v2/" -o !AppList!.json
+			Tools\CURL\curl.exe -s "https://api.steampowered.com/ISteamApps/GetAppList/v2/" -o !AppList!.json
 			powershell -Command "(gc -LiteralPath '%HOME%!AppList!.json') -replace '{\"appid\":', \"`r`n^<\" -replace ',\"name\":""', \"^>^<\" -replace '""""},', \"^>\" -replace '""""}]}}', \"^>\" | Out-File -LiteralPath '%HOME%!AppList!.txt' -NoNewline -encoding Default">NUL
 		)
 		for /f "tokens=1-10 delims=<>" %%a in (!AppList!.txt) do (
@@ -406,7 +410,7 @@ for /f "tokens=*" %%a in (dlcs_%GameAppID%.txt) do (
 	rem write database ini and steam_settings configs.app.ini
 	set "writeDLC=!EchoAppName!"
 	set "writeDLC=!writeDLC:lee.aspas="!"
-	set "writeDLC=!writeDLC:lee.and=^^^&!"
+	set "writeDLC=!writeDLC:lee.and=&!"
 	if "!count!"=="0" (
 		echo !DlcId! = !writeDLC!>%GameAppID%.ini
 		if not "!total!"=="0" echo [app::dlcs]>configs.app.ini&>>configs.app.ini echo unlock_all=0
@@ -426,18 +430,17 @@ if exist "%GameAppID%.json" del "%GameAppID%.json">NUL
 if exist "%GameAppID%.ini" (
 	if not exist "Database" mkdir "Database">NUL
 	for /f "tokens=1-9 delims=^=" %%1 in (%GameAppID%.ini) do (
-		if exist "Database\1971870.ini" (
+		if exist "Database\%GameAppID%.ini" (
 			findstr /C:"%%1" "Database\%GameAppID%.ini" 1>NUL 2>NUL:&&(echo>nul)||(
 				set newdlcline=true
 				powershell -Command "Add-Content '%%1=%%2' -LiteralPath '%HOME%Database\%GameAppID%.ini'"
 			)
+		) else (
+			move "%GameAppID%.ini" "Database\">NUL
 		)
 	)
-)	
-if defined newdlcline (
-	powershell -Command "gc -LiteralPath '%HOME%Database\%GameAppID%.ini' | Sort | Out-File -LiteralPath '%HOME%%GameAppID%.ini' -encoding UTF8"
-	move "%GameAppID%.ini" "Database\">NUL
 )
+if defined newdlcline powershell -Command "gc -LiteralPath '%HOME%Database\%GameAppID%.ini' | Sort | Out-File -LiteralPath '%HOME%%GameAppID%.ini' -encoding UTF8"
 if exist "%GameAppID%.ini" del "%GameAppID%.ini">NUL
 :: steam_settings - configs.app.ini
 if exist "configs.app.ini" move "configs.app.ini" "%GameName%\steam_settings\configs.app.ini">NUL
@@ -449,7 +452,7 @@ goto :EOF
 :function_configs_user
 echo.
 echo  [ ] Searching supported languages and configuring user . . .
-curl -s "https://store.steampowered.com/api/appdetails/?filters=basic&appids=%GameAppID%" -o %GameAppID%.json
+Tools\CURL\curl.exe -s "https://store.steampowered.com/api/appdetails/?filters=basic&appids=%GameAppID%" -o %GameAppID%.json
 ::get suported languages list
 for /f %%a in ('powershell -Command "$json = (gc -LiteralPath '%HOME%%GameAppID%.json') | ConvertFrom-Json; [bool]($json.PSobject.Properties.value.data -match 'supported_languages')"') do set ExistJsonLang=%%a
 if "%ExistJsonLang%"=="True" (
@@ -505,7 +508,7 @@ echo  [ ] Searching achievements . . .
 :: Achievements language
 for /f "tokens=*" %%a in ('mshta.exe "%HOME%Tools\GSE_achievements_language.hta" "%GameName%\steam_settings\supported_languages.txt"') do set AchievementsLanguage=%%a
 :: get achievements from steam
-curl -s -H "Accept-Language: %AchievementsLanguage%" -XGET "https://steamcommunity.com/stats/%GameAppID%/achievements/">steamachievements.html
+Tools\CURL\curl.exe -s -H "Accept-Language: %AchievementsLanguage%" -XGET "https://steamcommunity.com/stats/%GameAppID%/achievements/">steamachievements.html
 powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html') -replace '&apos;', \"'\" -replace '&amp;', '&' -replace '&quot;', 'lee.aspas' -replace '	', '' -replace '<div class=\"achieveImgHolder\">', \"`r`n^<ACHIEVEMENT^>\" | Out-File -LiteralPath '%HOME%steamachievements.html' -NoNewline -encoding Default">NUL
 powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html') -replace '<img src=.+/%GameAppID%/', '<' -replace '"" width=.+ class=\"achievePercent\">', '><' | Out-File -LiteralPath '%HOME%steamachievements.html' -encoding Default">NUL
 powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html') -replace '</div><div class=\"achieveTxt\"><h3>', '><' -replace '<h5></h5>.+achieveRow "">', '< >' -replace '</h3><h5>', '><' -replace '</h3>', '>' -replace '</h5>.+ class=\"achieveRow \"', '' -replace '</h5>.+</html>', '>' | Out-File -LiteralPath '%HOME%steamachievements.html' -encoding Default">NUL
@@ -573,8 +576,8 @@ for /f "tokens=1-9 delims=<>" %%1 in (steamdbachievements.html) do (
 			echo 		"name": "!name!"
 		)
 		if not exist "%GameName%\steam_settings\images" mkdir "%GameName%\steam_settings\images"
-		if not exist "%GameName%\steam_settings\images\!icon!" curl -s "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/%GameAppID%/!icon!" -o "%GameName%\steam_settings\images\!icon!"
-		if not exist "%GameName%\steam_settings\images\!icongray!" curl -s "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/%GameAppID%/!icongray!" -o "%GameName%\steam_settings\images\!icongray!"
+		if not exist "%GameName%\steam_settings\images\!icon!" Tools\CURL\curl.exe -s "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/%GameAppID%/!icon!" -o "%GameName%\steam_settings\images\!icon!"
+		if not exist "%GameName%\steam_settings\images\!icongray!" Tools\CURL\curl.exe -s "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/%GameAppID%/!icongray!" -o "%GameName%\steam_settings\images\!icongray!"
 		if "!count!"=="!total!" (echo 	}>>"%GameName%\steam_settings\achievements.json") else (echo 	},>>"%GameName%\steam_settings\achievements.json") 
 	)
 )
@@ -608,7 +611,7 @@ set "text=%1"
 set "text=%text:lee.aspas="%"
 set "text=%text:lee.and=^^^&%"
 powershell -Command "[Console]::CursorTop=%PROGRESSBACKTOLINE%"&echo                                                                                                     
-powershell -Command "[Console]::CursorTop=%PROGRESSBACKTOLINE%"&echo  %text:~1,-1%[0m
+powershell -Command "[Console]::CursorTop=%PROGRESSBACKTOLINE%"&echo  %text:~1,-1%[0m                                                                                                     
 powershell -Command "[Console]::CursorTop=%PROGRESSBACKTOLINE%"
 goto :EOF
 
@@ -769,7 +772,7 @@ goto :EOF
 :function_goldberg_emulator_fork
 echo.
 echo  [ ] Searching emulator . . .
-curl -s "https://api.github.com/repos/otavepto/gbe_fork/releases/latest" -o "gbe.json"
+Tools\CURL\curl.exe -s "https://api.github.com/repos/otavepto/gbe_fork/releases/latest" -o "gbe.json"
 for /f "tokens=*" %%a in ('powershell -Command "(gc -LiteralPath '%HOME%gbe.json' | ConvertFrom-Json).name"') do set gberelease=%%a
 for /f "tokens=*" %%a in ('powershell -Command "$json = (gc -LiteralPath '%HOME%gbe.json') | ConvertFrom-Json; $json.PSobject.Properties.value.name"') do echo %%a | findstr /C:"emu-win-release" 1>nul & if not errorlevel 1 set gbefile=%%a
 del "gbe.json">NUL
@@ -778,7 +781,7 @@ set gbefileext=%gbefile:emu-win-release=%
 if not exist "Tools\GoldbergSteamEmulator_otavepto\%gberelease%%gbefileext%" (
 	if not exist "Tools\GoldbergSteamEmulator_otavepto" mkdir "Tools\GoldbergSteamEmulator_otavepto">NUL
 	if exist "Tools\GoldbergSteamEmulator_otavepto\*" del /Q "Tools\GoldbergSteamEmulator_otavepto\*">NUL
-	curl -s -L "https://github.com/otavepto/gbe_fork/releases/latest/download/%gbefile%" -o "Tools\GoldbergSteamEmulator_otavepto\%gberelease%%gbefileext%"
+	Tools\CURL\curl.exe -s -L "https://github.com/otavepto/gbe_fork/releases/latest/download/%gbefile%" -o "Tools\GoldbergSteamEmulator_otavepto\%gberelease%%gbefileext%"
 )
 
 if exist "Tools\GoldbergSteamEmulator_otavepto\%gberelease%%gbefileext%" (
