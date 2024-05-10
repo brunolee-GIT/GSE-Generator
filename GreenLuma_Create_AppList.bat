@@ -6,6 +6,7 @@ cd /d "%HOME%"
 :: resizes the CMD window but maintains the scrolling function
 mode con cols=100 lines=40&powershell -command "&{$HEIGHT=get-host; $WIDTH=$HEIGHT.ui.rawui; $BUFFER=$WIDTH.buffersize; $BUFFER.width=100; $BUFFER.height=9999; $WIDTH.buffersize=$BUFFER;}"
 color 07
+setlocal enabledelayedexpansion
 
 : START
 call :function_banner
@@ -13,7 +14,6 @@ if not "%~nx1"=="" goto DRAG_AND_DROP_FILE
 
 : DATABASE
 if not exist "Database\*.ini" goto DRAG_AND_DROP_FILE
-setlocal enabledelayedexpansion
 chcp 65001>NUL
 set /a count=0
 for /f %%a in ('dir /A:A /B /O:N "Database\*.ini"') do (
@@ -33,9 +33,7 @@ echo.
 set selectline=!count!
 set /p selectline="[35m Select one number[0m [ [93m1[0m - [93;4m!count![0m ]: "
 if %selectline% GEQ 1 if %selectline% LEQ !count! set FILEPATH="%HOME%!File%selectline%!"&goto START
-endlocal
 goto START
-
 
 : DRAG_AND_DROP_FILE
 if "%~nx1"=="" goto OPEN_FILE_CONTEXT
@@ -91,18 +89,15 @@ if defined CancelAnswer (
 	if "%CancelAnswer%"=="7" goto OPEN_FOLDER_CONTEXT
 )
 ::folder selected
-for %%a in ("%SELECT_FOLDER%") do (
-	set "Directory=%%~dpna\"
-	set "Path=%%~dpa"
-	set "Folder=%%~na"
-)
-if "%Folder%"=="AppList" (set "DIR=%Path%") else (set "DIR=%Directory%")
+for %%a in ("%SELECT_FOLDER%") do if "%%~na"=="AppList" (set "DIR=%%~dpa") else (set "DIR=%%~dpna\")
 
 : INI_START
-setlocal enabledelayedexpansion
 set /a idfile=0
 if exist "%DIR%AppList" (
-	(for /f "tokens=*" %%a in ('dir /A:A /B "%DIR%AppList\*.txt"') do set sortnum=       %%a&echo !sortnum:~-7!)>AppListSortNum
+	(for /f "tokens=*" %%a in ('dir /A:A /B "%DIR%AppList\*.txt"') do (
+		set sortnum=       %%a
+		echo !sortnum:~-7!
+	))>AppListSortNum
 	sort AppListSortNum /O AppListSortNum
 	for /f %%a in (AppListSortNum) do call :function_reorder "%%a"&set /a idfile+=1
 	del "AppListSortNum">NUL
@@ -135,8 +130,8 @@ for /f "tokens=1-9 usebackq delims=^= eol=;" %%1 in (%FILEPATH%) do (
 	call :function_append
 )
 
-
 : END
+endlocal
 echo.
 pause>NUL|echo  Press any key to exit . . .
 exit
