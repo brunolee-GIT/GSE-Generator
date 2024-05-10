@@ -433,15 +433,21 @@ if exist "%GameAppID%.ini" (
 		if exist "Database\%GameAppID%.ini" (
 			findstr /C:"%%1" "Database\%GameAppID%.ini" 1>NUL 2>NUL:&&(echo>nul)||(
 				set newdlcline=true
-				powershell -Command "Add-Content '%%1=%%2' -LiteralPath '%HOME%Database\%GameAppID%.ini'"
+				echo %%1=%%2>>"%HOME%Database\%GameAppID%.ini"
 			)
-		) else (
-			move "%GameAppID%.ini" "Database\">NUL
 		)
 	)
 )
-if defined newdlcline powershell -Command "gc -LiteralPath '%HOME%Database\%GameAppID%.ini' | Sort | Out-File -LiteralPath '%HOME%%GameAppID%.ini' -encoding UTF8"
-if exist "%GameAppID%.ini" del "%GameAppID%.ini">NUL
+if defined newdlcline (
+	(for /f "tokens=1-9 delims=^=" %%a in (Database\%GameAppID%.ini) do (
+		set sortnum=0000000000%%a
+		echo ^<!sortnum:~-10,-1!^>%%a=%%b
+	))>AppListSortNum
+	sort AppListSortNum /O AppListSortNum
+	(for /f "tokens=1-9 delims=<>" %%1 in (AppListSortNum) do (echo %%2))>%GameAppID%.ini
+	del "AppListSortNum">NUL
+)
+if exist "%GameAppID%.ini" move "%GameAppID%.ini" "Database\">NUL
 :: steam_settings - configs.app.ini
 if exist "configs.app.ini" move "configs.app.ini" "%GameName%\steam_settings\configs.app.ini">NUL
 call :function_progress "[x] Done!"
