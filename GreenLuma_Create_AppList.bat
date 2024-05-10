@@ -8,7 +8,7 @@ mode con cols=100 lines=40&powershell -command "&{$HEIGHT=get-host; $WIDTH=$HEIG
 color 07
 setlocal enabledelayedexpansion
 
-: START
+: START_LIST
 call :function_banner
 if not "%~nx1"=="" goto DRAG_AND_DROP_FILE
 
@@ -33,7 +33,7 @@ echo.
 set selectline=!count!
 set /p selectline="[35m Select one number[0m [ [93m1[0m - [93;4m!count![0m ]: "
 if %selectline% GEQ 1 if %selectline% LEQ !count! set FILEPATH="%HOME%!File%selectline%!"&goto START
-goto START
+goto START_LIST
 
 : DRAG_AND_DROP_FILE
 if "%~nx1"=="" goto OPEN_FILE_CONTEXT
