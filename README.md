@@ -42,7 +42,22 @@ Database/
  └── ...
 ```
 >> *The database, in addition to speeding up the work of **GSE_Generator.bat**, can also be used to create the Applist for GreenLuma with **GreenLuma_Create_AppList.bat***
-
+##### Custom database format example:
+*custom_list.ini*
+``` ini
+Title =  My GreenLuma list
+;gamename
+appid = name
+other_appid = name
+...
+;other gamename
+appid = name
+other_appid = name
+...
+```
+> Legend:
+>> **`Title`** is to show on list.<br>
+>> **`;`** is the only "comment line" allowed, and is just for your organization.
 ***
 #### GSE force
 >> ***Tools/GSE_force.ini** is used to automatically fill in some of the fields presented in the window to create the **configs.user.ini** file*
