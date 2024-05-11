@@ -15,18 +15,30 @@ if not "%~nx1"=="" goto DRAG_AND_DROP_FILE
 : DATABASE
 if not exist "Database\*.ini" goto DRAG_AND_DROP_FILE
 chcp 65001>NUL
-set /a count=0
-for /f %%a in ('dir /A:A /B /O:N "Database\*.ini"') do (
-	set /a count+=1
+(for /f %%a in ('dir /A:A /B /O:N "Database\*.ini"') do (
 	for /f "tokens=1-9 delims=^=" %%1 in (Database\%%a) do (
+		if "%%1"=="Title " (
+			set dbname=%%2
+			set dbid=%%1
+			set dbfile=Database\%%a
+			echo ^<!dbname:~1!^>^<!dbfile!^>
+		)
 		if "%%1"=="%%~na " (
-			echo  [ [93m!count![0m ] -%%2
-			set File!count!=Database\%%a
-			set FILENAME=%%~na
-			
+			set dbname=%%2
+			set dbid=%%1
+			set dbfile=Database\%%a
+			echo ^<!dbname:~1!^>^<!dbfile!^>
 		)
 	)
+))>dblist
+sort dblist /O dblist
+set /a count=0
+for /f "tokens=1-9 delims=<>" %%1 in (dblist) do (
+	set /a count+=1
+	echo  [ [93m!count![0m ] - %%1
+	set File!count!=%%2
 )
+del "dblist">NUL
 
 : SELECT_LINE
 echo.
@@ -125,9 +137,13 @@ if defined CleanAnswer (
 )
 
 for /f "tokens=1-9 usebackq delims=^= eol=;" %%1 in (%FILEPATH%) do (
-	set AppId=%%1
-	set AppName=%%2
-	call :function_append
+	if not "%%1"=="Title " (
+		if not "%%1"=="[*]" (
+			set AppId=%%1
+			set AppName=%%2
+			call :function_append
+		)
+	)
 )
 
 : END
