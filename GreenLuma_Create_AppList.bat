@@ -93,7 +93,7 @@ for %%a in ("%SELECT_FOLDER%") do if "%%~na"=="AppList" (set "DIR=%%~dpa") else 
 
 : INI_START
 set /a idfile=0
-if exist "%DIR%AppList" (
+if exist "%DIR%AppList\*.txt" (
 	(for /f "tokens=*" %%a in ('dir /A:A /B "%DIR%AppList\*.txt"') do (
 		set sortnum=       %%a
 		echo !sortnum:~-7!
@@ -105,7 +105,7 @@ if exist "%DIR%AppList" (
 
 set CleanAnswer=
 if not "%idfile%"=="0" (
-	if exist "GreenLuma Check AppList.bat" call "GreenLuma Check AppList.bat" "goto START" "%DIR%AppList" -extbat
+	if exist "GreenLuma_Check_AppList.bat" call "GreenLuma_Check_AppList.bat" "goto START" "%DIR%AppList" -extbat
 	echo set outp=wscript.stdout : c=msgbox("AppList folder is not empty"+vbNewLine+"Do you want clean folder?",vbInformation+vbYesNo,"APPLIST"^) : outp.write(c^)>Clean.vbs
 	for /f "tokens=*" %%a in ('c:\windows\system32\cscript.exe /nologo Clean.vbs') do set CleanAnswer=%%a
 	del "Clean.vbs">NUL
