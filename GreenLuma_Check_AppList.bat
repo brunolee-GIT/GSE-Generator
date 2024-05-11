@@ -61,11 +61,14 @@ for /f %%a in (AppListSortNum) do (
 			for /f "tokens=1-9 usebackq delims=^=" %%1 in ("Database\!iniFile!") do (
 				set MaybeThis=%%1
 				set MaybeThis=!MaybeThis: =!
-				if "!MaybeThis!"=="!AppId!" (
-					set AppName=%%2
-					set FirstCharAppName=!AppName:~0,1!
-					if "!FirstCharAppName!"==" " set AppName=!AppName:~1!
-					echo  [90m!AppFile! - [93m!AppId![90m = [0m!AppName! [90m!iniFile![0m
+				if not defined App!AppId!Name (
+					if "!MaybeThis!"=="!AppId!" (
+						set App!AppId!Name=true
+						set AppName=%%2
+						set FirstCharAppName=!AppName:~0,1!
+						if "!FirstCharAppName!"==" " set AppName=!AppName:~1!
+						echo  [90m!AppFile! - [93m!AppId![90m = [0m!AppName! [90m!iniFile![0m
+					)
 				)
 			)
 		)
