@@ -186,7 +186,7 @@ set "steamgame=%game: =+%"
 
 set GameAppID=&set GameName=
 Tools\CURL\curl.exe -s --config Tools/CURL/config/safari15_5.config --header @Tools/CURL/config/safari15_5.header --url "https://www.google.com/search?q=%steamgame%+steamdb" -o google.html
-powershell -Command "(gc -LiteralPath '%HOME%google.html') -replace '<div><span jscontroller', \"`r`n^<GAME^>^<\" -replace 'href=""', '><' -replace '"""" data-', 'game><data' -replace \"'\", '' -replace '\\', '' -replace '\|', '' -replace '\?', '' -replace '\*', '' -replace '""', '' | Out-File -LiteralPath '%HOME%google.html' -NoNewline -encoding Default">NUL
+powershell -Command "(gc -LiteralPath '%HOME%google.html') -replace '<div><span jscontroller', \"`r`n^<GAME^>^<\" -replace 'href=""', '><' -replace '"""" data-', 'game><data' -replace \"'\", '' -replace '\\', '' -replace '\|', '' -replace '\?', '' -replace '\*', '' -replace '""', '' -replace '&apos;', '' -replace '&amp;', '' -replace '&#39;', '' | Out-File -LiteralPath '%HOME%google.html' -NoNewline -encoding Default">NUL
 for /f "tokens=1-9 delims=<>" %%1 in (google.html) do (
 	if "%%1"=="GAME" (
 		if not defined GameAppID (
@@ -515,15 +515,24 @@ echo  [ ] Searching achievements . . .
 for /f "tokens=*" %%a in ('mshta.exe "%HOME%Tools\GSE_achievements_language.hta" "%GameName%\steam_settings\supported_languages.txt"') do set AchievementsLanguage=%%a
 :: get achievements from steam
 Tools\CURL\curl.exe -s -H "Accept-Language: %AchievementsLanguage%" -XGET "https://steamcommunity.com/stats/%GameAppID%/achievements/">steamachievements.html
-powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html') -replace '&apos;', \"'\" -replace '&amp;', '&' -replace '&quot;', 'lee.aspas' -replace '	', '' -replace '<div class=\"achieveImgHolder\">', \"`r`n^<ACHIEVEMENT^>\" | Out-File -LiteralPath '%HOME%steamachievements.html' -NoNewline -encoding Default">NUL
-powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html') -replace '<img src=.+/%GameAppID%/', '<' -replace '"" width=.+ class=\"achievePercent\">', '><' | Out-File -LiteralPath '%HOME%steamachievements.html' -encoding Default">NUL
-powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html') -replace '</div><div class=\"achieveTxt\"><h3>', '><' -replace '<h5></h5>.+achieveRow "">', '< >' -replace '</h3><h5>', '><' -replace '</h3>', '>' -replace '</h5>.+ class=\"achieveRow \"', '' -replace '</h5>.+</html>', '>' | Out-File -LiteralPath '%HOME%steamachievements.html' -encoding Default">NUL
+rem powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html') -replace '&apos;', \"'\" -replace '&amp;', '&' -replace '&quot;', 'lee.aspas' -replace '	', '' -replace '<div class=\"achieveImgHolder\">', \"`r`n^<ACHIEVEMENT^>\" | Out-File -LiteralPath '%HOME%steamachievements.html' -NoNewline -encoding Default">NUL
+rem powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html') -replace '<img src=.+/%GameAppID%/', '<' -replace '"" width=.+ class=\"achievePercent\">', '><' | Out-File -LiteralPath '%HOME%steamachievements.html' -encoding Default">NUL
+rem powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html') -replace '</div><div class=\"achieveTxt\"><h3>', '><' -replace '<h5></h5>.+achieveRow "">', '< >' -replace '</h3><h5>', '><' -replace '</h3>', '>' -replace '</h5>.+ class=\"achieveRow \"', '' -replace '</h5>.+</html>', '>' | Out-File -LiteralPath '%HOME%steamachievements.html' -encoding Default">NUL
+rem powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html' | Select-Object -Skip 1) | Out-File -LiteralPath '%HOME%steamachievements.html' -encoding Default">NUL
+powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html') -replace '&apos;', \"'\" -replace '&amp;', '&' -replace '&quot;', 'lee.aspas' -replace '	', '' | Out-File -LiteralPath '%HOME%steamachievements.html' -NoNewline -encoding Default">NUL
+powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html') -replace 'images/apps/%GameAppID%/', \"`r`n^<ACHIEVEMENT^>^<\" -replace '(.jpg)(.*)(\"achievePercent\">)', '.jpg><' -replace '(</div>)(.*)(<h3>)', '><' -replace '</h3><h5>', '><' -replace '<</h5>.*', '< >' -replace '</h5>.*', '>' | Out-File -LiteralPath '%HOME%steamachievements.html' -encoding Default"
 powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html' | Select-Object -Skip 1) | Out-File -LiteralPath '%HOME%steamachievements.html' -encoding Default">NUL
+
+
 :: get achievements from steamdb
 Tools\CURL\curl.exe -s --config Tools/CURL/config/safari15_5.config --header @Tools/CURL/config/safari15_5.header --url "https://steamdb.info/app/%GameAppID%/stats/" -o steamdbachievements.html
+rem powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html') -replace '&apos;', \"'\" -replace '&amp;', '&' -replace '&quot;', 'lee.aspas' -replace '<tr id=""achievement-.+"">', \"`r`n^<ACHIEVEMENT^>\" | Out-File -LiteralPath '%HOME%steamdbachievements.html' -NoNewline -encoding Default">NUL
+rem powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html') -replace '</td><td>', '><' -replace '<td>', '<' -replace '<p class=\"i\">', '><' -replace '</p>><<img src=\"/static/img/appicon.svg\" data-name=""', '><' -replace '<svg .+ Hidden.', ' ' | Out-File -LiteralPath '%HOME%steamdbachievements.html' -encoding Default">NUL
+rem powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html') -replace '\" width=.+ data-name=\"', '><' -replace '"" width=.+ alt></td></tr>', '>' -replace '</tbody>.+</html>', '' | Out-File -LiteralPath '%HOME%steamdbachievements.html' -encoding Default">NUL
+rem powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html' | Select-Object -Skip 1) | Out-File -LiteralPath '%HOME%steamdbachievements.html' -encoding Default">NUL
 powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html') -replace '&apos;', \"'\" -replace '&amp;', '&' -replace '&quot;', 'lee.aspas' -replace '<tr id=""achievement-.+"">', \"`r`n^<ACHIEVEMENT^>\" | Out-File -LiteralPath '%HOME%steamdbachievements.html' -NoNewline -encoding Default">NUL
-powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html') -replace '</td><td>', '><' -replace '<td>', '<' -replace '<p class=\"i\">', '><' -replace '</p>><<img src=\"/static/img/appicon.svg\" data-name=""', '><' -replace '<svg .+ Hidden.', ' ' | Out-File -LiteralPath '%HOME%steamdbachievements.html' -encoding Default">NUL
-powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html') -replace '\" width=.+ data-name=\"', '><' -replace '"" width=.+ alt></td></tr>', '>' -replace '</tbody>.+</html>', '' | Out-File -LiteralPath '%HOME%steamdbachievements.html' -encoding Default">NUL
+powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html') -replace '<ACHIEVEMENT><td>', '<ACHIEVEMENT><' -replace '</td><td>', '><' -replace '<p class=\"i\">', '><' | Out-File -LiteralPath '%HOME%steamdbachievements.html' -encoding Default">NUL
+powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html') -replace '.jpg\" width.* data-name=\"', '.jpg><' -replace '<<svg width.* data-name=""', '< ><' -replace '</p>><<.* data-name=""""', '><' -replace '.jpg"" width.*', '.jpg>' | Out-File -LiteralPath '%HOME%steamdbachievements.html' -encoding Default">NUL
 powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html' | Select-Object -Skip 1) | Out-File -LiteralPath '%HOME%steamdbachievements.html' -encoding Default">NUL
 
 set /a total=0
@@ -681,7 +690,7 @@ powershell -Command^
 	Add-Type -AssemblyName System.Drawing;^
 	$monitor = [System.Windows.Forms.Screen]::AllScreens;^
 	$bgimg = [System.Drawing.Image]::Fromfile('Tools\ACHIVEMENTS\images\%Background%');^
-	$img = [System.Drawing.Image]::Fromfile('%AchivementImage%');^
+	$img = [System.Drawing.Image]::Fromfile(\"%AchivementImage%\");^
 	$sound = New-Object System.Media.SoundPlayer;^
 	$sound.SoundLocation = 'Tools\ACHIVEMENTS\sounds\overlay_achievement_notification.wav';^
 	$sound.Play();^
@@ -761,8 +770,8 @@ echo.
 echo  [ ] Searching interfaces . . .
 if exist "steam_interfaces.txt" del "steam_interfaces.txt">NUL
 rem powershell -Command "(gc -LiteralPath '%FileDir%%FileName%') -creplace 'Steam', \"`r`nSteam\" -creplace 'STEAM', \"`r`nSTEAM\" | Select-String 'Steam.*[0-9]{3}' -AllMatches | ForEach-Object{$_.Matches.Value}">steam_interfaces.txt
-powershell -Command "gc -LiteralPath '%FileDir%%FileName%' | Select-String 'SteamClient[0-9]{3}|SteamGameServerStats[0-9]{3}|SteamGameServer[0-9]{3}|SteamMatchMakingServers[0-9]{3}|SteamMatchMaking[0-9]{3}|SteamUser[0-9]{3}|SteamFriends[0-9]{3}|SteamUtils[0-9]{3}|STEAMUSERSTATS_INTERFACE_VERSION[0-9]{3}|STEAMAPPS_INTERFACE_VERSION[0-9]{3}|SteamNetworking[0-9]{3}|STEAMREMOTESTORAGE_INTERFACE_VERSION[0-9]{3}|STEAMSCREENSHOTS_INTERFACE_VERSION[0-9]{3}|STEAMHTTP_INTERFACE_VERSION[0-9]{3}|STEAMUNIFIEDMESSAGES_INTERFACE_VERSION[0-9]{3}|STEAMCONTROLLER_INTERFACE_VERSION[0-9]{3}|SteamController[0-9]{3}|STEAMUGC_INTERFACE_VERSION[0-9]{3}|STEAMAPPLIST_INTERFACE_VERSION[0-9]{3}|STEAMMUSIC_INTERFACE_VERSION[0-9]{3}|STEAMMUSICREMOTE_INTERFACE_VERSION[0-9]{3}|STEAMHTMLSURFACE_INTERFACE_VERSION_[0-9]{3}|STEAMINVENTORY_INTERFACE_V[0-9]{3}|STEAMVIDEO_INTERFACE_V[0-9]{3}|SteamMasterServerUpdater[0-9]{3}' -AllMatches | ForEach-Object{$_.Matches.Value} | Sort -unique">steam_interfaces.txt
-for /f "tokens=1-9 delims= " %%1 in ('find /C "SteamUser" "steam_interfaces.txt"') do set SteamUserCount=%%3
+powershell -Command "gc -LiteralPath \"%FileDir%%FileName%\" | Select-String 'SteamClient[0-9]{3}|SteamGameServerStats[0-9]{3}|SteamGameServer[0-9]{3}|SteamMatchMakingServers[0-9]{3}|SteamMatchMaking[0-9]{3}|SteamUser[0-9]{3}|SteamFriends[0-9]{3}|SteamUtils[0-9]{3}|STEAMUSERSTATS_INTERFACE_VERSION[0-9]{3}|STEAMAPPS_INTERFACE_VERSION[0-9]{3}|SteamNetworking[0-9]{3}|STEAMREMOTESTORAGE_INTERFACE_VERSION[0-9]{3}|STEAMSCREENSHOTS_INTERFACE_VERSION[0-9]{3}|STEAMHTTP_INTERFACE_VERSION[0-9]{3}|STEAMUNIFIEDMESSAGES_INTERFACE_VERSION[0-9]{3}|STEAMCONTROLLER_INTERFACE_VERSION[0-9]{3}|SteamController[0-9]{3}|STEAMUGC_INTERFACE_VERSION[0-9]{3}|STEAMAPPLIST_INTERFACE_VERSION[0-9]{3}|STEAMMUSIC_INTERFACE_VERSION[0-9]{3}|STEAMMUSICREMOTE_INTERFACE_VERSION[0-9]{3}|STEAMHTMLSURFACE_INTERFACE_VERSION_[0-9]{3}|STEAMINVENTORY_INTERFACE_V[0-9]{3}|STEAMVIDEO_INTERFACE_V[0-9]{3}|SteamMasterServerUpdater[0-9]{3}' -AllMatches | ForEach-Object{$_.Matches.Value} | Sort -unique">steam_interfaces.txt
+for /f "tokens=1-9 delims= " %%1 in ('find /C "SteamUser0" "steam_interfaces.txt"') do set SteamUserCount=%%3
 if "%SteamUserCount%"=="1" (
 	rem script achievement 
 	set TOASTNAME=ACHIEVEMENT_05&call :function_script_toast
