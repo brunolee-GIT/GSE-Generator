@@ -98,7 +98,6 @@ pause>NUL|echo  Press any key to exit . . .
 exit
 
 
-
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ::                                                           ::
 ::                         FUNCTIONS                         ::
@@ -106,7 +105,6 @@ exit
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :function_banner
 cls
-rem chcp 850>NUL
 echo. 
 echo   [44;4m                                                                                                [0m
 echo   [104m                                                                                                [0m
@@ -118,6 +116,7 @@ echo.
 goto :EOF
 
 :function_search_imput
+set Search=
 :: ImputTextBox / for multiline bypass characters like: ,;)=
 for /f "tokens=1-9 delims=[]" %%1 in ('^
 	powershell -Command^
@@ -174,17 +173,19 @@ for /f "tokens=1-9 delims=[]" %%1 in ('^
 if "%Search%"=="TEXTBOX_IS_EMPTY" call :function_banner&call :function_search_imput
 if "%Search%"=="PRESSED_X_TO_EXIT" exit
 
+
 :SEARCH_GAME
 echo.
 echo  [ ] Searching game . . .
-chcp 65001>NUL
+rem chcp 65001>NUL
+set GameAppID=&set GameName=
 set "Search=%Search:&=%"
-set "Search=%Search:  = %"
 set "Search=%Search:'=%"
+set "Search=%Search:  = %"
 for /f "tokens=*" %%a in ('powershell -Command "'%Search%'.ToLower()"') do set "game=%%a"
 set "steamgame=%game: =+%"
 
-set GameAppID=&set GameName=
+
 Tools\CURL\curl.exe -s --config Tools/CURL/config/safari15_5.config --header @Tools/CURL/config/safari15_5.header --url "https://www.google.com/search?q=%steamgame%+steamdb" -o google.html
 powershell -Command "(gc -LiteralPath '%HOME%google.html') -replace '<div><span jscontroller', \"`r`n^<GAME^>^<\" -replace 'href=""', '><' -replace '"""" data-', 'game><data' -replace \"'\", '' -replace '\\', '' -replace '\|', '' -replace '\?', '' -replace '\*', '' -replace '""', '' -replace '&apos;', '' -replace '&amp;', '' -replace '&#39;', '' | Out-File -LiteralPath '%HOME%google.html' -NoNewline -encoding Default">NUL
 for /f "tokens=1-9 delims=<>" %%1 in (google.html) do (
@@ -215,6 +216,8 @@ set "GameName=%GameName:<=%"
 set "GameName=%GameName:>=%"
 set "GameName=%GameName:/=%"
 set "GameName=%GameName::=%"
+set "GameName=%GameName:  = %"
+echo   [90m%GameName% (%GameAppID%)[0m
 
 :SHOW_IMAGE
 Tools\CURL\curl.exe -s "https://cdn.akamai.steamstatic.com/steam/apps/%GameAppID%/header.jpg" -o "%GameAppID%.jpg"
@@ -317,7 +320,7 @@ if "%searchAnswer%"=="6" goto :ONLINE
 if "%searchAnswer%"=="7" (
 	if exist "configs.app.ini" del "configs.app.ini">NUL
 	if not "%total%"=="0" echo [app::dlcs]>configs.app.ini&>>configs.app.ini echo unlock_all=0
-	for /f "tokens=* skip=1" %%a in (Database\%GameAppID%.ini) do echo "%%a" | powershell -Command "$input.substring(1) -replace '.{2}$' -replace ' = ', '='">>configs.app.ini
+	powershell -Command "(gc -LiteralPath '%HOME%Database\%GameAppID%.ini') -replace ' = ', '=' | Select-Object -Skip 1">>configs.app.ini
 	if exist "%GameAppID%.json" del "%GameAppID%.json">NUL
 	if exist "configs.app.ini" move "configs.app.ini" "%GameName%\steam_settings\configs.app.ini">NUL
 	echo  [x] Done!
@@ -515,21 +518,11 @@ echo  [ ] Searching achievements . . .
 for /f "tokens=*" %%a in ('mshta.exe "%HOME%Tools\GSE_achievements_language.hta" "%GameName%\steam_settings\supported_languages.txt"') do set AchievementsLanguage=%%a
 :: get achievements from steam
 Tools\CURL\curl.exe -s -H "Accept-Language: %AchievementsLanguage%" -XGET "https://steamcommunity.com/stats/%GameAppID%/achievements/">steamachievements.html
-rem powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html') -replace '&apos;', \"'\" -replace '&amp;', '&' -replace '&quot;', 'lee.aspas' -replace '	', '' -replace '<div class=\"achieveImgHolder\">', \"`r`n^<ACHIEVEMENT^>\" | Out-File -LiteralPath '%HOME%steamachievements.html' -NoNewline -encoding Default">NUL
-rem powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html') -replace '<img src=.+/%GameAppID%/', '<' -replace '"" width=.+ class=\"achievePercent\">', '><' | Out-File -LiteralPath '%HOME%steamachievements.html' -encoding Default">NUL
-rem powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html') -replace '</div><div class=\"achieveTxt\"><h3>', '><' -replace '<h5></h5>.+achieveRow "">', '< >' -replace '</h3><h5>', '><' -replace '</h3>', '>' -replace '</h5>.+ class=\"achieveRow \"', '' -replace '</h5>.+</html>', '>' | Out-File -LiteralPath '%HOME%steamachievements.html' -encoding Default">NUL
-rem powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html' | Select-Object -Skip 1) | Out-File -LiteralPath '%HOME%steamachievements.html' -encoding Default">NUL
 powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html') -replace '&apos;', \"'\" -replace '&amp;', '&' -replace '&quot;', 'lee.aspas' -replace '	', '' | Out-File -LiteralPath '%HOME%steamachievements.html' -NoNewline -encoding Default">NUL
 powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html') -replace 'images/apps/%GameAppID%/', \"`r`n^<ACHIEVEMENT^>^<\" -replace '(.jpg)(.*)(\"achievePercent\">)', '.jpg><' -replace '(</div>)(.*)(<h3>)', '><' -replace '</h3><h5>', '><' -replace '<</h5>.*', '< >' -replace '</h5>.*', '>' | Out-File -LiteralPath '%HOME%steamachievements.html' -encoding Default"
 powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html' | Select-Object -Skip 1) | Out-File -LiteralPath '%HOME%steamachievements.html' -encoding Default">NUL
-
-
 :: get achievements from steamdb
 Tools\CURL\curl.exe -s --config Tools/CURL/config/safari15_5.config --header @Tools/CURL/config/safari15_5.header --url "https://steamdb.info/app/%GameAppID%/stats/" -o steamdbachievements.html
-rem powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html') -replace '&apos;', \"'\" -replace '&amp;', '&' -replace '&quot;', 'lee.aspas' -replace '<tr id=""achievement-.+"">', \"`r`n^<ACHIEVEMENT^>\" | Out-File -LiteralPath '%HOME%steamdbachievements.html' -NoNewline -encoding Default">NUL
-rem powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html') -replace '</td><td>', '><' -replace '<td>', '<' -replace '<p class=\"i\">', '><' -replace '</p>><<img src=\"/static/img/appicon.svg\" data-name=""', '><' -replace '<svg .+ Hidden.', ' ' | Out-File -LiteralPath '%HOME%steamdbachievements.html' -encoding Default">NUL
-rem powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html') -replace '\" width=.+ data-name=\"', '><' -replace '"" width=.+ alt></td></tr>', '>' -replace '</tbody>.+</html>', '' | Out-File -LiteralPath '%HOME%steamdbachievements.html' -encoding Default">NUL
-rem powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html' | Select-Object -Skip 1) | Out-File -LiteralPath '%HOME%steamdbachievements.html' -encoding Default">NUL
 powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html') -replace '&apos;', \"'\" -replace '&amp;', '&' -replace '&quot;', 'lee.aspas' -replace '<tr id=""achievement-.+"">', \"`r`n^<ACHIEVEMENT^>\" | Out-File -LiteralPath '%HOME%steamdbachievements.html' -NoNewline -encoding Default">NUL
 powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html') -replace '<ACHIEVEMENT><td>', '<ACHIEVEMENT><' -replace '</td><td>', '><' -replace '<p class=\"i\">', '><' | Out-File -LiteralPath '%HOME%steamdbachievements.html' -encoding Default">NUL
 powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html') -replace '.jpg\" width.* data-name=\"', '.jpg><' -replace '<<svg width.* data-name=""', '< ><' -replace '</p>><<.* data-name=""""', '><' -replace '.jpg"" width.*', '.jpg>' | Out-File -LiteralPath '%HOME%steamdbachievements.html' -encoding Default">NUL
@@ -549,6 +542,8 @@ set NEW_ACHIEVEMENT=
 set /a count=0
 for /f "tokens=1-9 delims=<>" %%1 in (steamdbachievements.html) do (
 	if "%%1"=="ACHIEVEMENT" (
+		set LANG_description=
+		set LANG_displayName=
 		if "!count!"=="0" (
 			if exist "%GameName%\steam_settings\achievements.json" del "%GameName%\steam_settings\achievements.json">NUL
 			powershell -Command "Add-Content '[' -LiteralPath '%HOME%%GameName%\steam_settings\achievements.json' -encoding UTF8"
@@ -579,6 +574,8 @@ for /f "tokens=1-9 delims=<>" %%1 in (steamdbachievements.html) do (
 				set "LANG_Echoachdesc=!LANG_achdesc:&=lee.and!"
 			)
 		)
+		if "!LANG_description!"=="" set LANG_description=!ENG_description!
+		if "!LANG_displayName!"=="" set LANG_displayName=!ENG_displayName!
 		set /a count+=1
 		call :function_progress " [90m[!count!/!total!] [94m!globalstatistics! [92m!ENG_EchoachName!"
 		>>"%GameName%\steam_settings\achievements.json" (
@@ -590,9 +587,9 @@ for /f "tokens=1-9 delims=<>" %%1 in (steamdbachievements.html) do (
 			echo 		"icongray": "images/!icongray!",
 			echo 		"name": "!name!"
 		)
-		if not exist "%GameName%\steam_settings\images" mkdir "%GameName%\steam_settings\images"
-		if not exist "%GameName%\steam_settings\images\!icon!" Tools\CURL\curl.exe -s "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/%GameAppID%/!icon!" -o "%GameName%\steam_settings\images\!icon!"
-		if not exist "%GameName%\steam_settings\images\!icongray!" Tools\CURL\curl.exe -s "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/%GameAppID%/!icongray!" -o "%GameName%\steam_settings\images\!icongray!"
+		if not exist "%GameName%\steam_settings\images" mkdir "%GameName%\steam_settings\images">NUL
+		if not exist "%GameName%\steam_settings\images\!icon!" Tools\CURL\curl.exe -s "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/%GameAppID%/!icon!" -o "!icon!"&move "!icon!" "%GameName%\steam_settings\images\">NUL
+		if not exist "%GameName%\steam_settings\images\!icongray!" Tools\CURL\curl.exe -s "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/%GameAppID%/!icongray!" -o "!icongray!"&move "!icongray!" "%GameName%\steam_settings\images\">NUL
 		if "!count!"=="!total!" (echo 	}>>"%GameName%\steam_settings\achievements.json") else (echo 	},>>"%GameName%\steam_settings\achievements.json") 
 	)
 )
@@ -631,10 +628,10 @@ powershell -Command "[Console]::CursorTop=%PROGRESSBACKTOLINE%"
 goto :EOF
 
 :function_script_toast
-chcp 65001>NUL
+rem chcp 65001>NUL
 for /f "tokens=*" %%a in ('powershell -Command "(gc -LiteralPath '%HOME%Tools\ACHIVEMENTS\achievements.json' | ConvertFrom-Json).%TOASTNAME%.earned"') do set "AchivementEarned=%%a"
 if "%AchivementEarned%"=="False" (
-	chcp 1252>NUL
+	rem chcp 1252>NUL
 	for /f "tokens=*" %%a in ('powershell -Command "(gc -LiteralPath '%HOME%Tools\ACHIVEMENTS\achievements.json' | ConvertFrom-Json).%TOASTNAME%.displayName"') do set "AchivementName=%%a"
 	for /f "tokens=*" %%a in ('powershell -Command "(gc -LiteralPath '%HOME%Tools\ACHIVEMENTS\achievements.json' | ConvertFrom-Json).%TOASTNAME%.description"') do set "AchivementDescription=%%a"
 	for /f "tokens=*" %%a in ('powershell -Command "(gc -LiteralPath '%HOME%Tools\ACHIVEMENTS\achievements.json' | ConvertFrom-Json).%TOASTNAME%.icon"') do set "AchivementImage=%HOME%Tools\ACHIVEMENTS\%%a"
@@ -647,7 +644,7 @@ goto :EOF
 :function_test_achievements_file
 echo.
 echo  [ ] Showing achievements . . .
-chcp 65001>NUL
+rem chcp 65001>NUL
 set /a total=0
 for /f "tokens=1-9 delims=	: usebackq" %%a in ("%FileDir%achievements.json") do if "%%a"==""name"" (set /a total+=1)
 setlocal enabledelayedexpansion
