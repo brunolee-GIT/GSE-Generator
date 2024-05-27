@@ -1,8 +1,8 @@
 # GSE-Generator
 <p align="center">
-  <img width="600" src="https://i.imgur.com/evuBfti.png">
-  <br><br>
-  <a href=""><img src="https://img.shields.io/badge/script-bat / hta- ?logo=windowsterminal&style=social" alt="" title="Scripts"></a>
+  	<a href="https://i.imgur.com/evuBfti.png"><img width="600" src="https://i.imgur.com/evuBfti.png"></a>
+  	<br><br>
+  	<a href=""><img src="https://img.shields.io/badge/script-bat / hta- ?logo=windowsterminal&style=social" alt="" title="Scripts"></a>
 	&nbsp;<a href=""><img src="https://img.shields.io/badge/windows-10 / 11- ?logo=windows10&style=social" alt="" title="Windows"></a>
 </p>
 
