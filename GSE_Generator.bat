@@ -216,6 +216,7 @@ set "GameName=%GameName:<=%"
 set "GameName=%GameName:>=%"
 set "GameName=%GameName:/=%"
 set "GameName=%GameName::=%"
+set "GameName=%GameName:!=%"
 set "GameName=%GameName:  = %"
 echo   [90m%GameName% (%GameAppID%)[0m
 
