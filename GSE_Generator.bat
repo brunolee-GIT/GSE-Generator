@@ -783,29 +783,54 @@ if "%SteamUserCount%"=="1" (
 goto :EOF
 
 :function_goldberg_emulator_fork
+set LastKnownRelease=release-2024_7_7-sdk_1.60.7z
+set "dropboxLINK=https://www.dropbox.com/scl/fi/4krxb8c7kgwuoaoremesm/%LastKnownRelease%?rlkey=j8jo3o8fna3s9mn4iojtx9huv&dl=1"
+
 echo.
 echo  [ ] Searching emulator . . .
+::get info from github otavepto/gbe_fork
 Tools\CURL\curl.exe -s "https://api.github.com/repos/otavepto/gbe_fork/releases/latest" -o "gbe.json"
 for /f "tokens=*" %%a in ('powershell -Command "(gc -LiteralPath '%HOME%gbe.json' | ConvertFrom-Json).name"') do set gberelease=%%a
 for /f "tokens=*" %%a in ('powershell -Command "$json = (gc -LiteralPath '%HOME%gbe.json') | ConvertFrom-Json; $json.PSobject.Properties.value.name"') do echo %%a | findstr /C:"emu-win-release" 1>nul & if not errorlevel 1 set gbefile=%%a
 del "gbe.json">NUL
-set gbefileext=%gbefile:emu-win-release=%
+if defined gberelease set latest=%gberelease%%gbefile:emu-win-release=%
 
-if not exist "Tools\GoldbergSteamEmulator_otavepto\%gberelease%%gbefileext%" (
-	if not exist "Tools\GoldbergSteamEmulator_otavepto" mkdir "Tools\GoldbergSteamEmulator_otavepto">NUL
-	if exist "Tools\GoldbergSteamEmulator_otavepto\*" del /Q "Tools\GoldbergSteamEmulator_otavepto\*">NUL
-	Tools\CURL\curl.exe -s -L "https://github.com/otavepto/gbe_fork/releases/latest/download/%gbefile%" -o "Tools\GoldbergSteamEmulator_otavepto\%gberelease%%gbefileext%"
-)
-
-if exist "Tools\GoldbergSteamEmulator_otavepto\%gberelease%%gbefileext%" (
-	rem script achievement 
-	set TOASTNAME=ACHIEVEMENT_06&call :function_script_toast
-	if "%FileDir%%FileName%"=="%HOME%%FileName%" (
-		move "%FileName%" "%apiName%_o.dll">NUL
-	) else (
-		copy "%FileDir%%FileName%" "%apiName%_o.dll">NUL
+if defined latest (
+	rem download last version from github
+	if not exist "Tools\GoldbergSteamEmulator_otavepto\%latest%" (
+		if not exist "Tools\GoldbergSteamEmulator_otavepto" mkdir "Tools\GoldbergSteamEmulator_otavepto">NUL
+		if exist "Tools\GoldbergSteamEmulator_otavepto\*" del /Q "Tools\GoldbergSteamEmulator_otavepto\*">NUL
+		Tools\CURL\curl.exe -s -L "https://github.com/otavepto/gbe_fork/releases/latest/download/%gbefile%" -o "Tools\GoldbergSteamEmulator_otavepto\%latest%"
 	)
-	Tools\7z\7z.exe e -y "Tools\GoldbergSteamEmulator_otavepto\%gberelease%%gbefileext%" "release\experimental\%apiBits%\%apiName%.dll">NUL
+	rem allready have last version
+	if exist "Tools\GoldbergSteamEmulator_otavepto\%latest%" (
+		rem script achievement 
+		set TOASTNAME=ACHIEVEMENT_06&call :function_script_toast
+		if "%FileDir%%FileName%"=="%HOME%%FileName%" (
+			move "%FileName%" "%apiName%_o.dll">NUL
+		) else (
+			copy "%FileDir%%FileName%" "%apiName%_o.dll">NUL
+		)
+		Tools\7z\7z.exe e -y "Tools\GoldbergSteamEmulator_otavepto\%latest%" "release\experimental\%apiBits%\%apiName%.dll">NUL
+	)
+) else (
+	rem download last known version
+	if not exist "Tools\GoldbergSteamEmulator_otavepto\%LastKnownRelease%" (
+		if not exist "Tools\GoldbergSteamEmulator_otavepto" mkdir "Tools\GoldbergSteamEmulator_otavepto">NUL
+		if exist "Tools\GoldbergSteamEmulator_otavepto\*" del /Q "Tools\GoldbergSteamEmulator_otavepto\*">NUL
+		powershell -Command "wget -Uri '%dropboxLINK%' -d -OutFile 'Tools\GoldbergSteamEmulator_otavepto\%LastKnownRelease%'"
+	)
+	rem allready have known last version
+	if exist "Tools\GoldbergSteamEmulator_otavepto\%LastKnownRelease%" (
+		rem script achievement 
+		set TOASTNAME=ACHIEVEMENT_06&call :function_script_toast
+		if "%FileDir%%FileName%"=="%HOME%%FileName%" (
+			move "%FileName%" "%apiName%_o.dll">NUL
+		) else (
+			copy "%FileDir%%FileName%" "%apiName%_o.dll">NUL
+		)
+		Tools\7z\7z.exe e -y "Tools\GoldbergSteamEmulator_otavepto\%LastKnownRelease%" "release\experimental\%apiBits%\%apiName%.dll">NUL
+	)
 )
 
 echo  [x] Done!
