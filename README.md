@@ -32,7 +32,7 @@ Game name/
 >> 
 >> *The achievements will be downloaded in one of the languages supported by the game, with the respective images.*
 >> 
->> *The emulator will always be the latest release of [goldberg_emulator fork by @otavepto](https://github.com/otavepto/gbe_fork).*
+>> *The emulator will always be the latest release of ~~[fork by @otavepto](https://github.com/otavepto/gbe_fork)~~ ``now ->`` [goldberg_emulator fork by @Detanup01](https://github.com/Detanup01/gbe_fork).*
 
 ***
 #### Database
