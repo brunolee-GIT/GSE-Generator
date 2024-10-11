@@ -1,6 +1,6 @@
 @echo off
 powershell -Command "[Console]::CursorVisible=0"
-mode con cols=100 lines=40
+mode con cols=120 lines=40
 set TITLE=Goldberg Steam Emulator Generator
 set HOME=%~dp0
 title %TITLE%
@@ -105,14 +105,14 @@ exit
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 :function_banner
 cls
-echo. 
-echo   [44;4m                                                                                                [0m
-echo   [104m                                                                                                [0m
-echo   [104;97m                               GOLDBERG STEAM EMULATOR GENERATOR                                [0m
-echo   [104;37m                                 generate steam_settings folder                                 [0m
-echo   [104;4;30m                                                                                                [0m
-echo   [44;30m                                                                                                [0m
-echo. 
+echo.
+echo   [44;4m                                                                                                                    [0m
+echo   [104m                                                                                                                    [0m
+echo   [104;97m                                         GOLDBERG STEAM EMULATOR GENERATOR                                          [0m
+echo   [104;37m                                           generate steam_settings folder                                           [0m
+echo   [104;4;30m                                                                                                                    [0m
+echo   [44;30m                                                                                                                    [0m
+echo.
 goto :EOF
 
 :function_search_imput
@@ -218,7 +218,9 @@ set "GameName=%GameName:/=%"
 set "GameName=%GameName::=%"
 set "GameName=%GameName:!=%"
 set "GameName=%GameName:  = %"
-echo   [90m%GameName% (%GameAppID%)[0m
+set "GameNameShow=%GameName%"
+set "GameName=%GameName% (%GameAppID%)"
+echo   [90m%GameName%[0m
 
 :SHOW_IMAGE
 Tools\CURL\curl.exe -s "https://cdn.akamai.steamstatic.com/steam/apps/%GameAppID%/header.jpg" -o "%GameAppID%.jpg"
@@ -251,7 +253,7 @@ powershell -Command^
 		Location		= New-Object Drawing.Point 10, 25;^
 		Size			= New-Object Drawing.Size 500, 20;^
 		ForeColor		= 'gold';^
-		Text			= '%GameName%';^
+		Text			= '%GameNameShow%';^
 		Font			= 'Consolas bold, 13'^
 	};^
 	$form.Controls.Add($GameNameLabel);^
@@ -517,8 +519,9 @@ echo.
 echo  [ ] Searching achievements . . .
 :: Achievements language
 for /f "tokens=*" %%a in ('mshta.exe "%HOME%Tools\GSE_achievements_language.hta" "%GameName%\steam_settings\supported_languages.txt"') do set AchievementsLanguage=%%a
+if "%AchievementsLanguage%"=="ForceFix" (set AchLanguage=en) else (set AchLanguage=%AchievementsLanguage%)
 :: get achievements from steam
-Tools\CURL\curl.exe -s -H "Accept-Language: %AchievementsLanguage%" -XGET "https://steamcommunity.com/stats/%GameAppID%/achievements/">steamachievements.html
+Tools\CURL\curl.exe -s -H "Accept-Language: %AchLanguage%" -XGET "https://steamcommunity.com/stats/%GameAppID%/achievements/">steamachievements.html
 powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html') -replace '&apos;', \"'\" -replace '&amp;', '&' -replace '&quot;', 'lee.aspas' -replace '	', '' | Out-File -LiteralPath '%HOME%steamachievements.html' -NoNewline -encoding Default">NUL
 powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html') -replace 'images/apps/%GameAppID%/', \"`r`n^<ACHIEVEMENT^>^<\" -replace '(.jpg)(.*)(\"achievePercent\">)', '.jpg><' -replace '(</div>)(.*)(<h3>)', '><' -replace '</h3><h5>', '><' -replace '<</h5>.*', '< >' -replace '</h5>.*', '>' | Out-File -LiteralPath '%HOME%steamachievements.html' -encoding Default"
 powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html' | Select-Object -Skip 1) | Out-File -LiteralPath '%HOME%steamachievements.html' -encoding Default">NUL
@@ -526,7 +529,7 @@ powershell -Command "(gc -LiteralPath '%HOME%steamachievements.html' | Select-Ob
 Tools\CURL\curl.exe -s --config Tools/CURL/config/safari15_5.config --header @Tools/CURL/config/safari15_5.header --url "https://steamdb.info/app/%GameAppID%/stats/" -o steamdbachievements.html
 powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html') -replace '&apos;', \"'\" -replace '&amp;', '&' -replace '&quot;', 'lee.aspas' -replace '<tr id=""achievement-.+"">', \"`r`n^<ACHIEVEMENT^>\" | Out-File -LiteralPath '%HOME%steamdbachievements.html' -NoNewline -encoding Default">NUL
 powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html') -replace '<ACHIEVEMENT><td>', '<ACHIEVEMENT><' -replace '</td><td>', '><' -replace '<p class=\"i\">', '><' | Out-File -LiteralPath '%HOME%steamdbachievements.html' -encoding Default">NUL
-powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html') -replace '.jpg\" width.* data-name=\"', '.jpg><' -replace '<<svg width.* data-name=""', '< ><' -replace '</p>><<.* data-name=""""', '><' -replace '.jpg"" width.*', '.jpg>' | Out-File -LiteralPath '%HOME%steamdbachievements.html' -encoding Default">NUL
+powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html') -replace '.jpg\" width.* data-name=\"', '.jpg><' -replace '<<svg width.* data-name=""', '<TRFOCULTO><' -replace '</p>><<.* data-name=""""', '><' -replace '.jpg"" width.*', '.jpg>' | Out-File -LiteralPath '%HOME%steamdbachievements.html' -encoding Default">NUL
 powershell -Command "(gc -LiteralPath '%HOME%steamdbachievements.html' | Select-Object -Skip 1) | Out-File -LiteralPath '%HOME%steamdbachievements.html' -encoding Default">NUL
 
 set /a total=0
@@ -558,9 +561,16 @@ for /f "tokens=1-9 delims=<>" %%1 in (steamdbachievements.html) do (
 		set "ENG_achName=!ENG_achName:\/= /!"
 		set "ENG_EchoachName=!ENG_achName:&=lee.and!"
 		set "ENG_achdesc=%%4"
+		echo !ENG_achdesc! | findstr /C:"TRFOCULTO" 1>nul
+		if not errorlevel 1 (
+			set hidden=1
+			set ENG_achdesc=!ENG_achdesc:TRFOCULTO=!
+		) else (
+			set hidden=0
+		)
+		set "ENG_Echoachdesc=!ENG_achdesc:&=lee.and!"
 		set "ENG_description=!ENG_achdesc:lee.aspas=\"!"
 		set "ENG_achdesc=!ENG_achdesc:\/= /!"
-		set "ENG_Echoachdesc=!ENG_achdesc:&=lee.and!"
 		rem get achievements name from steam
 		for /f "tokens=1-9 delims=<>" %%a in (steamachievements.html) do (
 			if "%%b"=="!icon!" (
@@ -579,11 +589,12 @@ for /f "tokens=1-9 delims=<>" %%1 in (steamdbachievements.html) do (
 		if "!LANG_displayName!"=="" set LANG_displayName=!ENG_displayName!
 		set /a count+=1
 		call :function_progress " [90m[!count!/!total!] [94m!globalstatistics! [92m!ENG_EchoachName!"
+		if "%AchievementsLanguage%"=="ForceFix" (set "displayName=!ENG_displayName!"&set "description=!ENG_description!") else (set "displayName=!LANG_displayName!"&set "description=!LANG_description!")
 		>>"%GameName%\steam_settings\achievements.json" (
 			echo 	{
-			echo 		"description": "!LANG_description!",
-			echo 		"displayName": "!LANG_displayName!",
-			echo 		"hidden": 0,
+			echo 		"description": "!description!",
+			echo 		"displayName": "!displayName!",
+			echo 		"hidden": !hidden!,
 			echo 		"icon": "images/!icon!",
 			echo 		"icongray": "images/!icongray!",
 			echo 		"name": "!name!"
@@ -602,16 +613,25 @@ if exist "steamdbachievements.html" del "steamdbachievements.html">NUL
 
 :: steam_settings configs.overlay.ini
 if exist "%GameName%\steam_settings\achievements.json" (
-	>"%GameName%\steam_settings\configs.overlay.ini" (
-		echo [overlay::general]
-		echo enable_experimental_overlay=1
-		echo.
-		echo [overlay::appearance]
-		echo Notification_Rounding=10.0
-		echo Notification_Margin_x=5.0
-		echo Notification_Margin_y=5.0
-		echo Notification_Animation=0.35
-		echo PosAchievement=bot_right
+	if exist "Tools\ACHIVEMENTS\configs.overlay.ini" (
+		if exist "Tools\ACHIVEMENTS\fonts\*.ttf" (
+			if not exist "%GameName%\steam_settings\fonts" mkdir "%GameName%\steam_settings\fonts">NUL
+			start /wait call "Tools\FontsSelector.bat"
+			for /f "tokens=1-2 delims=^= eol=#" %%1 in (Tools\ACHIVEMENTS\configs.overlay.ini) do if "%%1"=="Font_Override" copy "Tools\ACHIVEMENTS\fonts\%%2" "%GameName%\steam_settings\fonts\">NUL
+		)
+		copy "Tools\ACHIVEMENTS\configs.overlay.ini" "%GameName%\steam_settings\">NUL
+	) else (
+		>"%GameName%\steam_settings\configs.overlay.ini" (
+			echo [overlay::general]
+			echo enable_experimental_overlay=1
+			echo.
+			echo [overlay::appearance]
+			echo Notification_Rounding=10.0
+			echo Notification_Margin_x=5.0
+			echo Notification_Margin_y=5.0
+			echo Notification_Animation=0.35
+			echo PosAchievement=bot_right
+		)
 	)
 	if not exist "%GameName%\steam_settings\sounds\" if exist "Tools\ACHIVEMENTS\sounds" xcopy /e "Tools\ACHIVEMENTS\sounds" "%GameName%\steam_settings\sounds\">NUL
 )
@@ -623,8 +643,8 @@ goto :EOF
 set "text=%1"
 set "text=%text:lee.aspas="%"
 set "text=%text:lee.and=^^^&%"
-powershell -Command "[Console]::CursorTop=%PROGRESSBACKTOLINE%"&echo                                                                                                     
-powershell -Command "[Console]::CursorTop=%PROGRESSBACKTOLINE%"&echo  %text:~1,-1%[0m                                                                                                     
+powershell -Command "[Console]::CursorTop=%PROGRESSBACKTOLINE%"&echo                                                                                                                         
+powershell -Command "[Console]::CursorTop=%PROGRESSBACKTOLINE%"&echo  %text:~1,-1%[0m                                                                                                                        
 powershell -Command "[Console]::CursorTop=%PROGRESSBACKTOLINE%"
 goto :EOF
 
@@ -747,7 +767,7 @@ goto :EOF
 
 :function_open_file_context
 for /f "tokens=*" %%a in ('powershell "Add-Type -AssemblyName System.windows.forms | Out-Null;$f=New-Object System.Windows.Forms.OpenFileDialog;$f.InitialDirectory='%cd%';$f.FileName='';$f.Filter='%WantedName% (*%WantedExtension%) | *%WantedExtension%';$f.showHelp=$false;$f.ShowDialog()|Out-Null;$f.FileName"') do set "FileDir=%%~dpa"&set "FileName=%%~nxa"
-if "%FileDir%"=="" echo c=msgbox("If it is more convenient:"+vbNewLine+"Drag-and-drop the %WantedName% file into the "+chr(34)+"GSE_Generator.bat"+chr(34)+" file!",vbInformation,"INFO")>Info.vbs&Info.vbs&del Info.vbs>NUL&exit
+if "%FileDir%"=="" echo c=msgbox("If it is more convenient:"+vbNewLine+"Drag-and-drop the %WantedName% file into the "+chr(34)+"GSE_Generator.bat"+chr(34)+" file!",vbInformation,"INFO")>Info.vbs&Info.vbs&del Info.vbs>NUL&goto END
 goto :EOF
 
 :function_steam_api_file
@@ -783,13 +803,40 @@ if "%SteamUserCount%"=="1" (
 goto :EOF
 
 :function_goldberg_emulator_fork
-set LastKnownRelease=release-2024_7_7-sdk_1.60.7z
-set "dropboxLINK=https://www.dropbox.com/scl/fi/4krxb8c7kgwuoaoremesm/%LastKnownRelease%?rlkey=j8jo3o8fna3s9mn4iojtx9huv&dl=1"
+:: INCONSISTENT STEAM API
+if not "%FileName%"=="%apiName%.dll" (
+	if "%FileName%"=="steam_api.dll" (
+		echo c=MsgBox("The steam api filename is 'steam_api.dll' but has been verified as being 64-bit"+vbNewline+vbNewLine+"Press YES: Continue with 64-bits"+vbNewline+"Press NO: Continue with 32-bits", vbInformation+vbYesNo+vbDefaultButton1, "INCONSISTENT STEAMAPI"^): Wscript.echo(c^)>InconsistentAPI.vbs
+	)
+	if "%FileName%"=="steam_api64.dll" (
+		echo c=MsgBox("The steam api filename is 'steam_api64.dll' but has been verified as being 32-bit"+vbNewline+vbNewLine+"Press YES: Continue with 32-bits"+vbNewline+"Press NO: Continue with 64-bits", vbInformation+vbYesNo+vbDefaultButton1, "INCONSISTENT STEAMAPI"^): Wscript.echo(c^)>InconsistentAPI.vbs
+	)
+)
+set API_ANSWER=
+set ChangeNameBits=
+if exist "InconsistentAPI.vbs" for /f "tokens=*" %%a in ('cscript InconsistentAPI.vbs') do set API_ANSWER=%%a
+if exist "InconsistentAPI.vbs" del InconsistentAPI.vbs>NUL
+if defined API_ANSWER (
+	rem API_AWSER=YES - prioritize detected bits
+	if "%API_ANSWER%"=="6" (
+		rem was detected 32bits - filename is from 64bits
+		if "%apiName%"=="steam_api" set ChangeNameBits=yes&set Optapi=64
+		rem was detected 64bits - filename is from 32bits
+		if "%apiName%"=="steam_api64" set ChangeNameBits=yes&set Optapi=32
+	)
+	rem API_AWSER=NO - prioritize filename
+	if "%API_ANSWER%"=="7" (
+		rem was detected 32bits - filename is from 64bits
+		if "%apiName%"=="steam_api" set apiBits=x64&set apiName=steam_api64&set Optapi=32
+		rem was detected 64bits - filename is from 32bits
+		if "%apiName%"=="steam_api64" set apiBits=x32&set apiName=steam_api&set Optapi=64
+	)
+)
 
 echo.
 echo  [ ] Searching emulator . . .
-::get info from github otavepto/gbe_fork
-Tools\CURL\curl.exe -s "https://api.github.com/repos/otavepto/gbe_fork/releases/latest" -o "gbe.json"
+::get info from github gbe_fork
+Tools\CURL\curl.exe -s "https://api.github.com/repos/Detanup01/gbe_fork/releases/latest" -o "gbe.json"
 for /f "tokens=*" %%a in ('powershell -Command "(gc -LiteralPath '%HOME%gbe.json' | ConvertFrom-Json).name"') do set gberelease=%%a
 for /f "tokens=*" %%a in ('powershell -Command "$json = (gc -LiteralPath '%HOME%gbe.json') | ConvertFrom-Json; $json.PSobject.Properties.value.name"') do echo %%a | findstr /C:"emu-win-release" 1>nul & if not errorlevel 1 set gbefile=%%a
 del "gbe.json">NUL
@@ -797,13 +844,13 @@ if defined gberelease set latest=%gberelease%%gbefile:emu-win-release=%
 
 if defined latest (
 	rem download last version from github
-	if not exist "Tools\GoldbergSteamEmulator_otavepto\%latest%" (
-		if not exist "Tools\GoldbergSteamEmulator_otavepto" mkdir "Tools\GoldbergSteamEmulator_otavepto">NUL
-		if exist "Tools\GoldbergSteamEmulator_otavepto\*" del /Q "Tools\GoldbergSteamEmulator_otavepto\*">NUL
-		Tools\CURL\curl.exe -s -L "https://github.com/otavepto/gbe_fork/releases/latest/download/%gbefile%" -o "Tools\GoldbergSteamEmulator_otavepto\%latest%"
+	if not exist "Tools\GoldbergSteamEmulator\%latest%" (
+		if not exist "Tools\GoldbergSteamEmulator" mkdir "Tools\GoldbergSteamEmulator">NUL
+		if exist "Tools\GoldbergSteamEmulator\*" del /Q "Tools\GoldbergSteamEmulator\*">NUL
+		Tools\CURL\curl.exe -s -L "https://github.com/Detanup01/gbe_fork/releases/latest/download/%gbefile%" -o "Tools\GoldbergSteamEmulator\%latest%"
 	)
 	rem allready have last version
-	if exist "Tools\GoldbergSteamEmulator_otavepto\%latest%" (
+	if exist "Tools\GoldbergSteamEmulator\%latest%" (
 		rem script achievement 
 		set TOASTNAME=ACHIEVEMENT_06&call :function_script_toast
 		if "%FileDir%%FileName%"=="%HOME%%FileName%" (
@@ -811,28 +858,27 @@ if defined latest (
 		) else (
 			copy "%FileDir%%FileName%" "%apiName%_o.dll">NUL
 		)
-		Tools\7z\7z.exe e -y "Tools\GoldbergSteamEmulator_otavepto\%latest%" "release\experimental\%apiBits%\%apiName%.dll">NUL
-	)
-) else (
-	rem download last known version
-	if not exist "Tools\GoldbergSteamEmulator_otavepto\%LastKnownRelease%" (
-		if not exist "Tools\GoldbergSteamEmulator_otavepto" mkdir "Tools\GoldbergSteamEmulator_otavepto">NUL
-		if exist "Tools\GoldbergSteamEmulator_otavepto\*" del /Q "Tools\GoldbergSteamEmulator_otavepto\*">NUL
-		powershell -Command "wget -Uri '%dropboxLINK%' -d -OutFile 'Tools\GoldbergSteamEmulator_otavepto\%LastKnownRelease%'"
-	)
-	rem allready have known last version
-	if exist "Tools\GoldbergSteamEmulator_otavepto\%LastKnownRelease%" (
-		rem script achievement 
-		set TOASTNAME=ACHIEVEMENT_06&call :function_script_toast
-		if "%FileDir%%FileName%"=="%HOME%%FileName%" (
-			move "%FileName%" "%apiName%_o.dll">NUL
-		) else (
-			copy "%FileDir%%FileName%" "%apiName%_o.dll">NUL
-		)
-		Tools\7z\7z.exe e -y "Tools\GoldbergSteamEmulator_otavepto\%LastKnownRelease%" "release\experimental\%apiBits%\%apiName%.dll">NUL
+		Tools\7z\7z.exe e -y "Tools\GoldbergSteamEmulator\%latest%" "release\experimental\%apiBits%\%apiName%.dll">NUL
 	)
 )
-
+if not defined latest (
+	if not exist "Tools\GoldbergSteamEmulator" mkdir "Tools\GoldbergSteamEmulator">NUL
+	Tools\CURL\curl.exe -s -L "https://github.com/brunolee-GIT/GSE-Generator/releases/download/backup/backup.7z" -o "Tools\GoldbergSteamEmulator\backup.7z"
+	if exist "Tools\GoldbergSteamEmulator\backup.7z" (
+		if "%FileDir%%FileName%"=="%HOME%%FileName%" (
+			move "%FileName%" "%apiName%_o.dll">NUL
+		) else (
+			copy "%FileDir%%FileName%" "%apiName%_o.dll">NUL
+		)
+		Tools\7z\7z.exe e -y "Tools\GoldbergSteamEmulator\backup.7z" "release\experimental\%apiBits%\%apiName%.dll">NUL
+	)
+)
+:: change API file name if different and priority bits are detected
+if defined ChangeNameBits (
+	if "%apiName%"=="steam_api" move "%apiName%.dll" "steam_api64.dll">NUL&move "%apiName%_o.dll" "steam_api64_o.dll">NUL
+	if "%apiName%"=="steam_api64" move "%apiName%.dll" "steam_api.dll">NUL&move "%apiName%_o.dll" "steam_api_o.dll">NUL
+)
+if defined API_ANSWER echo c=msgbox("If doesn't work, you need the api %Optapi%-bit version",vbExclamation,"INCONSISTENT STEAMAPI INFORMATION"^)>Info.vbs&Info.vbs&del Info.vbs>NUL
 echo  [x] Done!
 goto :EOF
 
